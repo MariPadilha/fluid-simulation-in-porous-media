@@ -3,7 +3,8 @@
 #include <math.h>
 #include "comum.h"
 #include "functions.h"
-
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
 
 struct Iterations iterations;
 struct Ref ref;
@@ -50,21 +51,21 @@ int jmax;  //(Hvert / dx_c) + 1;  //numero de pontos da malha em y
 
 
 // Main data structures for control of the mesh
-double *x, *y;       //malha principal
-double *xm, *ym; //malha deslocada
+double *dev_x, *dev_y;       //malha principal
+double *dev_xm, *dev_ym; //malha deslocada
 double **vol_u;    //volume de controle de u
 double **vol_v;     //volume de controle de v
 double **vol_p;       //volume de controle de p
 
 //Áreas para u e v
-double *areau_n;  //area n de u
-double *areau_s;  //area s de u
-double *areau_e;  //area e de u
-double *areau_w;  //area w de u
-double *areav_n;  //area n de v
-double *areav_s;  //area s de v
-double *areav_e;  //area e de v
-double *areav_w;  //area w de v
+double *dev_areau_n;  //area n de u
+double *dev_areau_s;  //area s de u
+double *dev_areau_e;  //area e de u
+double *dev_areau_w;  //area w de u
+double *dev_areav_n;  //area n de v
+double *dev_areav_s;  //area s de v
+double *dev_areav_e;  //area e de v
+double *dev_areav_w;  //area w de v
 
 // Variáveis auxiliares        
 double *dx, *dy; 
@@ -137,11 +138,10 @@ void calcular(){
 }
 
 void alocar_globais(){
-    x = (double*)malloc(sizeof(double)*(imax+1));
-    y = (double*)malloc(sizeof(double)*(jmax+1));
-
-    xm = (double*)malloc(sizeof(double)*(imax+2));
-    ym = (double*)malloc(sizeof(double)*(jmax+2));
+    cudaMalloc((void**)&dev_x, sizeof(double)*(imax+1));
+    cudaMalloc((void**)&dev_y, sizeof(double)*(jmax+1));
+    cudaMalloc((void**)&dev_xm, sizeof(double)*(imax+2));
+    cudaMalloc((void**)&dev_ym, sizeof(double)*(jmax+2));
 
     vol_u = (double**)malloc(sizeof(double*)*(imax+2));
     for(int i = 0; i < (imax+2); i++){
@@ -158,14 +158,14 @@ void alocar_globais(){
         vol_p[i] = (double*)malloc(sizeof(double)*(jmax+1));
     }
 
-    areau_n = (double*)malloc(sizeof(double)*(imax+2));
-    areau_s = (double*)malloc(sizeof(double)*(imax+2));
-    areau_e = (double*)malloc(sizeof(double)*(jmax+1));
-    areau_w = (double*)malloc(sizeof(double)*(jmax+1));
-    areav_n = (double*)malloc(sizeof(double)*(imax+1));
-    areav_s = (double*)malloc(sizeof(double)*(imax+1)); 
-    areav_e = (double*)malloc(sizeof(double)*(jmax+2));
-    areav_w = (double*)malloc(sizeof(double)*(jmax+2));
+    cudaMalloc((void**)&dev_areau_n, sizeof(double)*(imax+2));
+    cudaMalloc((void**)&dev_areau_s, sizeof(double)*(imax+2));
+    cudaMalloc((void**)&dev_areau_e, sizeof(double)*(jmax+1));
+    cudaMalloc((void**)&dev_areau_w, sizeof(double)*(jmax+1));
+    cudaMalloc((void**)&dev_areav_n, sizeof(double)*(imax+1));
+    cudaMalloc((void**)&dev_areav_s, sizeof(double)*(imax+1)); 
+    cudaMalloc((void**)&dev_areav_e, sizeof(double)*(jmax+2));
+    cudaMalloc((void**)&dev_areav_w, sizeof(double)*(jmax+2));
 
     dx = (double*)malloc(sizeof(double)*(imax+2));
     dy = (double*)malloc(sizeof(double)*(jmax+2));
@@ -321,20 +321,20 @@ void alocar_globais(){
 }
 
 void desalocar_globais(){
-    free(x);
-    free(y);
-    free(xm);
-    free(ym);
-    free(areau_n);
-    free(areau_s);
-    free(areau_e);
-    free(areau_w);
-    free(areav_n);
-    free(areav_s); 
-    free(areav_e);
-    free(areav_w);
     free(dx);
     free(dy);
+    cudaFree(dev_xm);
+    cudaFree(dev_ym);
+    cudaFree(dev_x);
+    cudaFree(dev_y);
+    cudaFree(dev_areau_n);
+    cudaFree(dev_areau_s);
+    cudaFree(dev_areau_e);
+    cudaFree(dev_areau_w);
+    cudaFree(dev_areav_n);
+    cudaFree(dev_areav_s);
+    cudaFree(dev_areav_e);
+    cudaFree(dev_areav_w);
 
     for(int i = 0; i < (imax+2); i++){
         free(vol_u[i]);

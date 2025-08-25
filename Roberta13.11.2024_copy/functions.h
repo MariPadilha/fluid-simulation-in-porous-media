@@ -28,4 +28,11 @@ void restart(double **um, double **vm, double **p, double **t, double **c);
 void restart_dom(double **um, double **vm, double **p, double **t, double **z, double **h);
 void mesh();
 double max(double a, double b);
+void calcula_area_das_fases();
+void calcula_x_y();
+void calcula_xm_ym();
+void calcula_vol_u_v_p();
+dim3 grid_1d(int n, int threads);
+dim3 grid_2d(int imax, int jmax, int threads_x, int threads_y);
+
 #endif
