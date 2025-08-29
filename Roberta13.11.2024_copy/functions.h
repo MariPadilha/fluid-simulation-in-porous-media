@@ -1,6 +1,5 @@
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
-
 void upwind_Ui(double **um, double **vm, double **p, double **ru, int j);
 void upwind_Uj(double **um, double **vm, double **p, double **ru, int i);
 void upwind_Vi(double **um, double **vm, double **p, double **rv, double **t, int j);
@@ -31,7 +30,7 @@ double max(double a, double b);
 void calcula_area_das_fases();
 void calcula_x_y();
 void calcula_xm_ym();
-void calcula_vol_u_v_p();
+void calcula_dx_dy();
 dim3 grid_1d(int n, int threads);
 dim3 grid_2d(int imax, int jmax, int threads_x, int threads_y);
 

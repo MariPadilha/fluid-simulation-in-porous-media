@@ -126,8 +126,8 @@ int main(){
     //--- Create mesh ---
     mesh();
 
-    for(j = 1; j <= jmax; j++){
-        for(i = 1; i <= imax; i++){
+    for(i = 1; i <= imax; i++){
+        for(j = 1; j <= jmax; j++){
             if(flag[i][j] != c_f){
                 t[i][j] = temp_cylinder;
                 c[i][j] = concentracao_inicial;

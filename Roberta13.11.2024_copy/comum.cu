@@ -53,9 +53,9 @@ int jmax;  //(Hvert / dx_c) + 1;  //numero de pontos da malha em y
 // Main data structures for control of the mesh
 double *dev_x, *dev_y;       //malha principal
 double *dev_xm, *dev_ym; //malha deslocada
-double **vol_u;    //volume de controle de u
-double **vol_v;     //volume de controle de v
-double **vol_p;       //volume de controle de p
+double *dev_vol_u;    //volume de controle de u
+double *dev_vol_v;     //volume de controle de v
+double *dev_vol_p;       //volume de controle de p
 
 //Áreas para u e v
 double *dev_areau_n;  //area n de u
@@ -68,7 +68,7 @@ double *dev_areav_e;  //area e de v
 double *dev_areav_w;  //area w de v
 
 // Variáveis auxiliares        
-double *dx, *dy; 
+double *dev_dx, *dev_dy; 
 
 double **epsilon1, **liga_poros; 
 
@@ -138,26 +138,13 @@ void calcular(){
 }
 
 void alocar_globais(){
-    cudaMalloc((void**)&dev_x, sizeof(double)*(imax+1));
-    cudaMalloc((void**)&dev_y, sizeof(double)*(jmax+1));
+    cudaMallocManaged((void**)&dev_x, sizeof(double)*(imax+1));
+    cudaMallocManaged((void**)&dev_y, sizeof(double)*(jmax+1));
     cudaMalloc((void**)&dev_xm, sizeof(double)*(imax+2));
     cudaMalloc((void**)&dev_ym, sizeof(double)*(jmax+2));
-
-    vol_u = (double**)malloc(sizeof(double*)*(imax+2));
-    for(int i = 0; i < (imax+2); i++){
-        vol_u[i] = (double*)malloc(sizeof(double)*(jmax+1));
-    }
-
-    vol_v = (double**)malloc(sizeof(double*)*(imax+1));
-    for(int i = 0; i < (imax+1); i++){
-        vol_v[i] = (double*)malloc(sizeof(double)*(jmax+2));
-    }
-
-    vol_p = (double**)malloc(sizeof(double*)*(imax+1));
-    for(int i = 0; i < (imax+1); i++){
-        vol_p[i] = (double*)malloc(sizeof(double)*(jmax+1));
-    }
-
+    cudaMalloc((void**)&dev_vol_u, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_vol_v, sizeof(double)*(imax+1)*(jmax+2));
+    cudaMalloc((void**)&dev_vol_p, sizeof(double)*(imax+1)*(jmax+1));
     cudaMalloc((void**)&dev_areau_n, sizeof(double)*(imax+2));
     cudaMalloc((void**)&dev_areau_s, sizeof(double)*(imax+2));
     cudaMalloc((void**)&dev_areau_e, sizeof(double)*(jmax+1));
@@ -166,9 +153,8 @@ void alocar_globais(){
     cudaMalloc((void**)&dev_areav_s, sizeof(double)*(imax+1)); 
     cudaMalloc((void**)&dev_areav_e, sizeof(double)*(jmax+2));
     cudaMalloc((void**)&dev_areav_w, sizeof(double)*(jmax+2));
-
-    dx = (double*)malloc(sizeof(double)*(imax+2));
-    dy = (double*)malloc(sizeof(double)*(jmax+2));
+    cudaMalloc((void**)&dev_dx, sizeof(double)*(imax+2));
+    cudaMalloc((void**)&dev_dy, sizeof(double)*(jmax+2));
 
     epsilon1 = (double**)malloc(sizeof(double*)*(imax+1));
     liga_poros = (double**)malloc(sizeof(double*)*(imax+1));
@@ -321,12 +307,15 @@ void alocar_globais(){
 }
 
 void desalocar_globais(){
-    free(dx);
-    free(dy);
-    cudaFree(dev_xm);
-    cudaFree(dev_ym);
     cudaFree(dev_x);
     cudaFree(dev_y);
+    cudaFree(dev_dx);
+    cudaFree(dev_dy);
+    cudaFree(dev_vol_u);
+    cudaFree(dev_vol_v);
+    cudaFree(dev_vol_p);
+    cudaFree(dev_xm);
+    cudaFree(dev_ym);
     cudaFree(dev_areau_n);
     cudaFree(dev_areau_s);
     cudaFree(dev_areau_e);
@@ -337,7 +326,6 @@ void desalocar_globais(){
     cudaFree(dev_areav_w);
 
     for(int i = 0; i < (imax+2); i++){
-        free(vol_u[i]);
         free(fw[i]);
         free(fe[i]);
         free(fs[i]);
@@ -380,7 +368,6 @@ void desalocar_globais(){
         free(dxdvdy[i]);
         free(dydudx[i]);
     }
-    free(vol_u);
     free(fw);
     free(fe);
     free(fs);
@@ -424,8 +411,6 @@ void desalocar_globais(){
     free(dydudx);
 
     for(int i = 0; i < (imax+1); i++){
-        free(vol_v[i]);
-        free(vol_p[i]);
         free(epsilon1[i]);
         free(liga_poros[i]);
         free(flag[i]);
@@ -453,10 +438,7 @@ void desalocar_globais(){
         free(artdivv[i]);
         free(res_z[i]);
         free(res_c[i]);
-
     }
-    free(vol_v);
-    free(vol_p);
     free(epsilon1);
     free(liga_poros);
     free(flag);

@@ -6,14 +6,14 @@
 #include <math.h>
 #include "functions.h"
 
-struct Iterations {
+struct Iterations{
     int itc_max, nc, n_tr, n_out, n_vort;
     double beta, b_art, dtau_f, final_time, eps, eps_mass;
     int start_mode;
 };
 extern struct Iterations iterations;
 
-struct Ref {
+struct Ref{
     double tnu, yf_b, yo_oo, ts, tn_too;
 };
 extern struct Ref ref;
@@ -26,9 +26,9 @@ extern int imax;
 extern double dx_c;
 extern int jmax;
 extern double *dev_x, *dev_y, *dev_xm, *dev_ym;
-extern double **vol_u, **vol_v, **vol_p;
+extern double *dev_vol_u, *dev_vol_v, *dev_vol_p;
 extern double *dev_areau_n, *dev_areau_s,*dev_areau_e, *dev_areau_w, *dev_areav_n, *dev_areav_s, *dev_areav_e, *dev_areav_w;       
-extern double *dx, *dy;
+extern double *dev_dx, *dev_dy;
 extern double **epsilon1, **liga_poros;
 extern double rad1;
 extern int c_i, c_b, c_f, c_bs;     

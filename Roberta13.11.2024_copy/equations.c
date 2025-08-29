@@ -17,17 +17,17 @@ void upwind_Ui(double **um, double **vm, double **p, double **ru, int j){
 
     for(i = 2; i <= imax; i++){
         //compute x-direction velocity component un
-        fn[i][j] = 0.5 * (vm[i][j+1]+vm[i-1][j+1]) * areau_n[i] / epsilon1[i][j];
-        fs[i][j] = 0.5 * (vm[i][j]+vm[i-1][j]) * areau_s[i] / epsilon1[i][j];
-        fe[i][j] = 0.5 * (um[i+1][j]+um[i][j]) * areau_e[j] / epsilon1[i][j];
-        fw[i][j] = 0.5 * (um[i][j]+um[i-1][j]) * areau_w[j] / epsilon1[i][j];
+        fn[i][j] = 0.5 * (vm[i][j+1]+vm[i-1][j+1]) * dev_areau_n[i] / epsilon1[i][j];
+        fs[i][j] = 0.5 * (vm[i][j]+vm[i-1][j]) * dev_areau_s[i] / epsilon1[i][j];
+        fe[i][j] = 0.5 * (um[i+1][j]+um[i][j]) * dev_areau_e[j] / epsilon1[i][j];
+        fw[i][j] = 0.5 * (um[i][j]+um[i-1][j]) * dev_areau_w[j] / epsilon1[i][j];
 
         df[i][j] = fe[i][j] - fw[i][j] + fn[i][j] - fs[i][j];
 
-        dn[i][j] = (epsilon1[i][j]/re) * areau_n[i] / (y[j+1]-y[j]);
-        ds[i][j] = (epsilon1[i][j]/re) * areau_s[i] / (y[j]-y[j-1]);
-        de[i][j] = (epsilon1[i][j]/re) * areau_e[j] / (xm[i+1]-xm[i]);
-        dw[i][j] = (epsilon1[i][j]/re) * areau_w[j] / (xm[i]-xm[i-1]);
+        dn[i][j] = (epsilon1[i][j]/re) * dev_areau_n[i] / (dev_y[j+1]-dev_y[j]);
+        ds[i][j] = (epsilon1[i][j]/re) * dev_areau_s[i] / (dev_y[j]-dev_y[j-1]);
+        de[i][j] = (epsilon1[i][j]/re) * dev_areau_e[j] / (dev_xm[i+1]-dev_xm[i]);
+        dw[i][j] = (epsilon1[i][j]/re) * dev_areau_w[j] / (dev_xm[i]-dev_xm[i-1]);
 
         //upwind
         aw[i][j] = dw[i][j] + max(fw[i][j], 0.0);
@@ -44,16 +44,16 @@ void upwind_Ui(double **um, double **vm, double **p, double **ru, int j){
         u_p[i][j] = um[i][j];
         v_p[i][j] = vm[i][j];
 
-        dudxdx[i][j] = areau_e[j] * (u_e[i][j]-u_p[i][j]) / (xm[i+1]-xm[i])
-                     - areau_w[j] * (u_p[i][j]-u_w[i][j]) / (xm[i]-xm[i-1]); 
+        dudxdx[i][j] = dev_areau_e[j] * (u_e[i][j]-u_p[i][j]) / (dev_xm[i+1]-dev_xm[i])
+                     - dev_areau_w[j] * (u_p[i][j]-u_w[i][j]) / (dev_xm[i]-dev_xm[i-1]); 
     
-        dxdvdy[i][j] = areau_e[j] * (vm[i][j+1]-vm[i][j]) / (ym[j+1]-ym[j])
-                     - areau_w[j] * (vm[i-1][j+1]-vm[i-1][j]) / (ym[j+1]-ym[j]);
+        dxdvdy[i][j] = dev_areau_e[j] * (vm[i][j+1]-vm[i][j]) / (dev_ym[j+1]-dev_ym[j])
+                     - dev_areau_w[j] * (vm[i-1][j+1]-vm[i-1][j]) / (dev_ym[j+1]-dev_ym[j]);
 
         //bulk artificial viscosity term from Ramshaw(1990)
-        q_art[i][j] = epsilon1[i][j] * (p[i][j]-p[i-1][j]) / (x[i]-x[i-1]) - iterations.b_art * (dudxdx[i][j]+dxdvdy[i][j]);
+        q_art[i][j] = epsilon1[i][j] * (p[i][j]-p[i-1][j]) / (dev_x[i]-x[i-1]) - iterations.b_art * (dudxdx[i][j]+dxdvdy[i][j]);
 
-        ru[i][j] = 1.0 / (x[i]-x[i-1]) / (y[j]-y[j-1]) * (-ap[i][j]*u_p[i][j]
+        ru[i][j] = 1.0 / (dev_x[i]-x[i-1]) / (dev_y[j]-dev_y[j-1]) * (-ap[i][j]*u_p[i][j]
                 +  aw[i][j] * u_w[i][j] + ae[i][j] * u_e[i][j]
                 +  as[i][j] * u_s[i][j] + an[i][j] * u_n[i][j])
                 -  q_art[i][j] - epsilon1[i][j] * (u_p[i][j]/(re*darcy_number) 
@@ -64,22 +64,23 @@ void upwind_Ui(double **um, double **vm, double **p, double **ru, int j){
 }
 
 //--- upwind_U ---
+
 void upwind_Uj(double **um, double **vm, double **p, double **ru, int i){
     int j;
 
     for(j = 2; j <= jmax-1; j++){
         //compute x-direction velocity component un
-        fn[i][j] = 0.5 * (vm[i][j+1]+vm[i-1][j+1]) * areau_n[i] / epsilon1[i][j];
-        fs[i][j] = 0.5 * (vm[i][j]+vm[i-1][j]) * areau_s[i] / epsilon1[i][j];
-        fe[i][j] = 0.5 * (um[i+1][j]+um[i][j]) * areau_e[j] / epsilon1[i][j];
-        fw[i][j] = 0.5 * (um[i][j]+um[i-1][j]) * areau_w[j] / epsilon1[i][j];
+        fn[i][j] = 0.5 * (vm[i][j+1]+vm[i-1][j+1]) * dev_areau_n[i] / epsilon1[i][j];
+        fs[i][j] = 0.5 * (vm[i][j]+vm[i-1][j]) * dev_areau_s[i] / epsilon1[i][j];
+        fe[i][j] = 0.5 * (um[i+1][j]+um[i][j]) * dev_areau_e[j] / epsilon1[i][j];
+        fw[i][j] = 0.5 * (um[i][j]+um[i-1][j]) * dev_areau_w[j] / epsilon1[i][j];
 
         df[i][j] = fe[i][j] - fw[i][j] + fn[i][j] - fs[i][j];
 
-        dn[i][j] = (epsilon1[i][j]/re) * areau_n[i] / (y[j+1]-y[j]);
-        ds[i][j] = (epsilon1[i][j]/re) * areau_s[i] / (y[j]-y[j-1]);
-        de[i][j] = (epsilon1[i][j]/re) * areau_e[j] / (xm[i+1]-xm[i]);
-        dw[i][j] = (epsilon1[i][j]/re) * areau_w[j] / (xm[i]-xm[i-1]);
+        dn[i][j] = (epsilon1[i][j]/re) * dev_areau_n[i] / (dev_y[j+1]-dev_y[j]);
+        ds[i][j] = (epsilon1[i][j]/re) * dev_areau_s[i] / (dev_y[j]-dev_y[j-1]);
+        de[i][j] = (epsilon1[i][j]/re) * dev_areau_e[j] / (dev_xm[i+1]-dev_xm[i]);
+        dw[i][j] = (epsilon1[i][j]/re) * dev_areau_w[j] / (dev_xm[i]-dev_xm[i-1]);
 
         //upwind
         aw[i][j] = dw[i][j] + max(fw[i][j], 0.0);
@@ -96,17 +97,17 @@ void upwind_Uj(double **um, double **vm, double **p, double **ru, int i){
         u_p[i][j] = um[i][j];
         v_p[i][j] = vm[i][j];
 
-        dudxdx[i][j] = areau_e[j] * (u_e[i][j]-u_p[i][j]) / (xm[i+1]-xm[i])
-                     - areau_w[j] * (u_p[i][j]-u_w[i][j]) / (xm[i]-xm[i-1]); 
+        dudxdx[i][j] = dev_areau_e[j] * (u_e[i][j]-u_p[i][j]) / (dev_xm[i+1]-dev_xm[i])
+                     - dev_areau_w[j] * (u_p[i][j]-u_w[i][j]) / (dev_xm[i]-dev_xm[i-1]); 
     
-        dxdvdy[i][j] = areau_e[j] * (vm[i][j+1]-vm[i][j]) / (ym[j+1]-ym[j])
-                     - areau_w[j] * (vm[i-1][j+1]-vm[i-1][j]) / (ym[j+1]-ym[j]);
+        dxdvdy[i][j] = dev_areau_e[j] * (vm[i][j+1]-vm[i][j]) / (dev_ym[j+1]-dev_ym[j])
+                     - dev_areau_w[j] * (vm[i-1][j+1]-vm[i-1][j]) / (dev_ym[j+1]-dev_ym[j]);
 
         //bulk artificial viscosity term from Ramshaw(1990)
-        q_art[i][j] = epsilon1[i][j] * (p[i][j]-p[i-1][j]) / (x[i]-x[i-1]) 
+        q_art[i][j] = epsilon1[i][j] * (p[i][j]-p[i-1][j]) / (dev_x[i]-dev_x[i-1]) 
                     - (iterations.b_art) * (dudxdx[i][j]+dxdvdy[i][j]);
 
-        ru[i][j] = 1.0 / (x[i]-x[i-1]) / (y[j]-y[j-1]) * (-ap[i][j]*u_p[i][j]
+        ru[i][j] = 1.0 / (dev_x[i]-dev_x[i-1]) / (dev_y[j]-dev_y[j-1]) * (-ap[i][j]*u_p[i][j]
                 +  aw[i][j] * u_w[i][j] + ae[i][j] * u_e[i][j]
                 +  as[i][j] * u_s[i][j] + an[i][j] * u_n[i][j])
                 -  q_art[i][j] - epsilon1[i][j] * (u_p[i][j]/(re*darcy_number) 
@@ -121,17 +122,17 @@ void upwind_Vi(double **um, double **vm, double **p, double **rv, double **t, in
     int i, itc;
 
     for(i = 2; i <= imax-1; i++){
-        fn[i][j] = 0.5 * (vm[i][j]+vm[i][j+1]) * areav_n[i] / epsilon1[i][j]; 
-        fs[i][j] = 0.5 * (vm[i][j]+vm[i][j-1]) * areav_s[i] / epsilon1[i][j]; 
-        fe[i][j] = 0.5 * (um[i+1][j]+um[i+1][j-1]) * areav_e[j] / epsilon1[i][j];  
-        fw[i][j] = 0.5 * (um[i][j] + um[i][j-1]) * areav_w[j] / epsilon1[i][j];
+        fn[i][j] = 0.5 * (vm[i][j]+vm[i][j+1]) * dev_areav_n[i] / epsilon1[i][j]; 
+        fs[i][j] = 0.5 * (vm[i][j]+vm[i][j-1]) * dev_areav_s[i] / epsilon1[i][j]; 
+        fe[i][j] = 0.5 * (um[i+1][j]+um[i+1][j-1]) * dev_areav_e[j] / epsilon1[i][j];  
+        fw[i][j] = 0.5 * (um[i][j] + um[i][j-1]) * dev_areav_w[j] / epsilon1[i][j];
 
         df[i][j] = fe[i][j] - fw[i][j] + fn[i][j] - fs[i][j];
 
-        dn[i][j] = (epsilon1[i][j]/re) * areav_n[i] / (ym[j+1]-ym[j]);
-        ds[i][j] = (epsilon1[i][j]/re) * areav_s[i] / (ym[j]-ym[j-1]);
-        de[i][j] = (epsilon1[i][j]/re) * areav_e[j] / (x[i+1]-x[i]);
-        dw[i][j] = (epsilon1[i][j]/re) * areav_w[j] / (x[i]-x[i-1]);
+        dn[i][j] = (epsilon1[i][j]/re) * dev_areav_n[i] / (dev_ym[j+1]-dev_ym[j]);
+        ds[i][j] = (epsilon1[i][j]/re) * dev_areav_s[i] / (dev_ym[j]-dev_ym[j-1]);
+        de[i][j] = (epsilon1[i][j]/re) * dev_areav_e[j] / (dev_x[i+1]-dev_x[i]);
+        dw[i][j] = (epsilon1[i][j]/re) * dev_areav_w[j] / (dev_x[i]-dev_x[i-1]);
 
         //upwind
         aw[i][j] = dw[i][j] + max(fw[i][j], 0.0);
@@ -148,11 +149,11 @@ void upwind_Vi(double **um, double **vm, double **p, double **rv, double **t, in
         v_p[i][j] = vm[i][j];
         u_p[i][j] = um[i][j];
 
-        dvdydy[i][j] = areav_n[i] * (v_n[i][j]-v_p[i][j]) / (ym[j+1]-ym[j])
-                     - areav_s[i] * (v_p[i][j]-v_s[i][j]) / (ym[j]-ym[j-1]); 
+        dvdydy[i][j] = dev_areav_n[i] * (v_n[i][j]-v_p[i][j]) / (dev_ym[j+1]-dev_ym[j])
+                     - dev_areav_s[i] * (v_p[i][j]-v_s[i][j]) / (ym[j]-ym[j-1]); 
             
-        dydudx[i][j] = areav_n[i] * (um[i+1][j]-um[i][j]) / (xm[i+1]-xm[i])
-                     - areav_s[i] * (um[i+1][j-1]-um[i][j-1]) / (xm[i+1]-xm[i]);
+        dydudx[i][j] = dev_areav_n[i] * (um[i+1][j]-um[i][j]) / (xm[i+1]-xm[i])
+                     - dev_areav_s[i] * (um[i+1][j-1]-um[i][j-1]) / (xm[i+1]-xm[i]);
             
         //bulk artificial viscosity term from Ramshaw(1990)
         q_art[i][j] = epsilon1[i][j] * (p[i][j]-p[i][j-1]) / (y[j]-y[j-1]) - iterations.b_art * (dydudx[i][j]+dvdydy[i][j]);
@@ -216,7 +217,7 @@ void upwind_Vj(double **um, double **vm, double **p, double **rv, double **t, in
     }
 }
 
-//resu////////////////////
+//resu////////////
 void RESU(double **um, double **vm, double **p, double **ru){
     int i, j;   
     for(j = 3; j <= jmax-2; j++){
@@ -226,7 +227,6 @@ void RESU(double **um, double **vm, double **p, double **ru){
             fe[i][j] = 0.5 * (um[i+1][j] + um[i][j]) * areau_e[j] / epsilon1[i][j];
             fw[i][j] = 0.5 * (um[i][j] + um[i-1][j]) * areau_w[j] / epsilon1[i][j];
             df[i][j] = fe[i][j] - fw[i][j] + fn[i][j] - fs[i][j];
-
             dn[i][j] = (epsilon1[i][j]/re) * areau_n[i] / (y[j+1] - y[j]);
             ds[i][j] = (epsilon1[i][j]/re) * areau_s[i] / (y[j] - y[j-1]);
             de[i][j] = (epsilon1[i][j]/re) * areau_e[j] / (xm[i+1] - xm[i]);
