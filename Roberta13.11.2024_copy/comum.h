@@ -36,8 +36,12 @@ extern int **flag;
 extern double g, ao, l_c, v_i, v_c, fr, invfr2, s, lf, lo;
 extern double too, tsup, tinf, q_dim, q;
 extern double cp_tot, rho_tot, k_tot, nu_tot, alpha_tot, re, pr, pe, sc;
-extern double **fw, **fe, **fs, **fn, **df, **aw, **aww, **ae, **aee, **as, **ass;
-extern double **an, **ann, **ap, **dn, **ds, **de, **dw, **u_w, **u_ww, **u_e;
+extern double *dev_fw, *dev_fe, *dev_fs, *dev_fn;
+extern double *dev_df, *dev_dn, *dev_ds, *dev_de, *dev_dw;
+extern double *dev_aw, *dev_as, *dev_ae, *dev_an, *dev_ap;
+
+extern double **aww, **aee, **ass;
+extern double **ann, **u_w, **u_ww, **u_e;
 extern double **u_ee, **u_s, **u_ss, **u_n, **u_nn, **u_p, **v_w, **v_ww, **v_e;
 extern double **v_ee, **v_s, **v_ss, **v_n, **v_nn, **v_p, **q_art, **dudxdx;
 extern double **dvdydy, **dxdvdy, **dydudx;
