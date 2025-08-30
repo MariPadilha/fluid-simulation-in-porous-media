@@ -1,22 +1,13 @@
 #include "comum.h"
 //#define OUTPUT 1 //Para debug
 
-double maxval(double *array, int n){
-    double max = array[0];
-    for(int i = 1; i < n; i++){
-        if (array[i] > max)
-            max = array[i];
-    }
-    return max;
-}
-
 void mesh(){
-    int i, j, ii=0, jj=0;
+    int i, j;
 
     calcula_x_y();
     calcula_xm_ym();
     calcula_area_das_fases();
-    calcula_dy_dx();
+    calcula_dx_dy();
 
 //------------bloco L=1 ----------------------------------------
     for(i = 1; i <= imax; i++){
@@ -63,14 +54,16 @@ void mesh(){
     for(i = 1; i <= imax; i++){
         for(j = 1; j <= jmax; j++){
             if(flag[i][j] != c_f){
-                epsilon1[i][j] = porosidade;       
-                liga_poros[i][j] = 1.0;
+                epsilon1[i*(jmax+1) + j] = porosidade;       
+                liga_poros[i*(jmax+1) + j] = 1.0;
             }else{ 
-                epsilon1[i][j] = 1.0;
-                liga_poros[i][j] = 0.0;
+                epsilon1[i*(jmax+1) + j] = 1.0;
+                liga_poros[i*(jmax+1) + j] = 0.0;
             }
         } 
     }
+
+    cudaMemcpy(dev_epsilon1, epsilon1, sizeof(double)*(imax+1)*(jmax+1), cudaMemcpyHostToDevice);
 
 //////////////////////////////////////////////////////////////////////////
 //debug
@@ -78,7 +71,7 @@ void mesh(){
         FILE *arquivo;
         arquivo = fopen("data/grid_droplet.dat", "w");
         for(i = 1; i <= imax; i++){
-            for(int j = 1; j <= jmax; j++){
+            for(j = 1; j <= jmax; j++){
                 if(flag[i][j] == c_i){ 
                     fprintf(arquivo, "%lf %lf\n", dev_x[i], dev_y[j]);
                 }
@@ -87,8 +80,8 @@ void mesh(){
         fclose(arquivo);
 
         arquivo = fopen("data/grid_boundary.dat", "w");
-        for(int i = 1; i <= imax; i++){
-            for(int j = 1; j <= jmax; j++){
+        for(i = 1; i <= imax; i++){
+            for(j = 1; j <= jmax; j++){
                 if(flag[i][j] == c_b){ 
                     fprintf(arquivo, "%lf %lf\n", dev_x[i], dev_y[j]);
                 }
@@ -97,8 +90,8 @@ void mesh(){
         fclose(arquivo);
 
         arquivo = fopen("data/grid_boundary_side.dat", "w");
-        for(int i = 1; i <= imax; i++){
-            for(int j = 1; j <= jmax; j++){
+        for(i = 1; i <= imax; i++){
+            for(j = 1; j <= jmax; j++){
                 if(flag[i][j] == c_bs){ 
                     fprintf(arquivo, "%lf %lf\n", dev_x[i], dev_y[j]);
                 }

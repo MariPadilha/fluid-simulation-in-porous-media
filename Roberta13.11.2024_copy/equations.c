@@ -17,49 +17,49 @@ void upwind_Ui(double **um, double **vm, double **p, double **ru, int j){
 
     for(i = 2; i <= imax; i++){
         //compute x-direction velocity component un
-        dev_fn[i][j] = 0.5 * (vm[i][j+1]+vm[i-1][j+1]) * dev_areau_n[i] / epsilon1[i][j];
-        dev_fs[i][j] = 0.5 * (vm[i][j]+vm[i-1][j]) * dev_areau_s[i] / epsilon1[i][j];
-        dev_fe[i][j] = 0.5 * (um[i+1][j]+um[i][j]) * dev_areau_e[j] / epsilon1[i][j];
-        dev_fw[i][j] = 0.5 * (um[i][j]+um[i-1][j]) * dev_areau_w[j] / epsilon1[i][j];
+        dev_fn[i][j] = 0.5 * (vm[i][j+1]+vm[i-1][j+1]) * dev_areau_n[i] / dev_epsilon1[i][j];
+        dev_fs[i][j] = 0.5 * (vm[i][j]+vm[i-1][j]) * dev_areau_s[i] / dev_epsilon1[i][j];
+        dev_fe[i][j] = 0.5 * (um[i+1][j]+um[i][j]) * dev_areau_e[j] / dev_epsilon1[i][j];
+        dev_fw[i][j] = 0.5 * (um[i][j]+um[i-1][j]) * dev_areau_w[j] / dev_epsilon1[i][j];
 
-        df[i][j] = dev_fe[i][j] - dev_fw[i][j] + dev_fn[i][j] - dev_fs[i][j];
+        dev_df[i][j] = dev_fe[i][j] - dev_fw[i][j] + dev_fn[i][j] - dev_fs[i][j];
 
-        dn[i][j] = (epsilon1[i][j]/re) * dev_areau_n[i] / (dev_y[j+1]-dev_y[j]);
-        ds[i][j] = (epsilon1[i][j]/re) * dev_areau_s[i] / (dev_y[j]-dev_y[j-1]);
-        de[i][j] = (epsilon1[i][j]/re) * dev_areau_e[j] / (dev_xm[i+1]-dev_xm[i]);
-        dw[i][j] = (epsilon1[i][j]/re) * dev_areau_w[j] / (dev_xm[i]-dev_xm[i-1]);
+        dev_dn[i][j] = (dev_epsilon1[i][j]/re) * dev_areau_n[i] / (dev_y[j+1]-dev_y[j]);
+        dev_ds[i][j] = (dev_epsilon1[i][j]/re) * dev_areau_s[i] / (dev_y[j]-dev_y[j-1]);
+        dev_de[i][j] = (dev_epsilon1[i][j]/re) * dev_areau_e[j] / (dev_xm[i+1]-dev_xm[i]);
+        dev_dw[i][j] = (dev_epsilon1[i][j]/re) * dev_areau_w[j] / (dev_xm[i]-dev_xm[i-1]);
 
         //upwind
-        aw[i][j] = dw[i][j] + max(dev_fw[i][j], 0.0);
-        as[i][j] = ds[i][j] + max(dev_fs[i][j], 0.0);
-        ae[i][j] = de[i][j] + max(0.0, -dev_fe[i][j]);
-        an[i][j] = dn[i][j] + max(0.0, -dev_fn[i][j]);
+        dev_aw[i][j] = dev_dw[i][j] + max(dev_fw[i][j], 0.0);
+        dev_as[i][j] = dev_ds[i][j] + max(dev_fs[i][j], 0.0);
+        dev_ae[i][j] = dev_de[i][j] + max(0.0, -dev_fe[i][j]);
+        dev_an[i][j] = dev_dn[i][j] + max(0.0, -dev_fn[i][j]);
 
-        ap[i][j] = aw[i][j] + ae[i][j] + as[i][j] + an[i][j] + df[i][j];
+        dev_ap[i][j] = dev_aw[i][j] + dev_ae[i][j] + dev_as[i][j] + dev_an[i][j] + dev_df[i][j];
 
-        u_w[i][j] = um[i-1][j];
-        u_e[i][j] = um[i+1][j];
-        u_s[i][j] = um[i][j-1];
-        u_n[i][j] = um[i][j+1];
-        u_p[i][j] = um[i][j];
-        v_p[i][j] = vm[i][j];
+        dev_u_w[i][j] = um[i-1][j];
+        dev_u_e[i][j] = um[i+1][j];
+        dev_u_s[i][j] = um[i][j-1];
+        dev_u_n[i][j] = um[i][j+1];
+        dev_u_p[i][j] = um[i][j];
+        dev_v_p[i][j] = vm[i][j];
 
-        dudxdx[i][j] = dev_areau_e[j] * (u_e[i][j]-u_p[i][j]) / (dev_xm[i+1]-dev_xm[i])
-                     - dev_areau_w[j] * (u_p[i][j]-u_w[i][j]) / (dev_xm[i]-dev_xm[i-1]); 
+        dev_dudxdx[i][j] = dev_areau_e[j] * (dev_u_e[i][j]-dev_u_p[i][j]) / (dev_xm[i+1]-dev_xm[i])
+                     - dev_areau_w[j] * (dev_u_p[i][j]-dev_u_w[i][j]) / (dev_xm[i]-dev_xm[i-1]); 
     
-        dxdvdy[i][j] = dev_areau_e[j] * (vm[i][j+1]-vm[i][j]) / (dev_ym[j+1]-dev_ym[j])
+        dev_dxdvdy[i][j] = dev_areau_e[j] * (vm[i][j+1]-vm[i][j]) / (dev_ym[j+1]-dev_ym[j])
                      - dev_areau_w[j] * (vm[i-1][j+1]-vm[i-1][j]) / (dev_ym[j+1]-dev_ym[j]);
 
         //bulk artificial viscosity term from Ramshaw(1990)
-        q_art[i][j] = epsilon1[i][j] * (p[i][j]-p[i-1][j]) / (dev_x[i]-dev_x[i-1]) - iterations.b_art * (dudxdx[i][j]+dxdvdy[i][j]);
+        q_art[i][j] = dev_epsilon1[i][j] * (p[i][j]-p[i-1][j]) / (dev_x[i]-dev_x[i-1]) - iterations.b_art * (dev_dudxdx[i][j]+dev_dxdvdy[i][j]);
 
-        ru[i][j] = 1.0 / (dev_x[i]-dev_x[i-1]) / (dev_y[j]-dev_y[j-1]) * (-ap[i][j]*u_p[i][j]
-                +  aw[i][j] * u_w[i][j] + ae[i][j] * u_e[i][j]
-                +  as[i][j] * u_s[i][j] + an[i][j] * u_n[i][j])
-                -  q_art[i][j] - epsilon1[i][j] * (u_p[i][j]/(re*darcy_number) 
-                +  cf/pow((epsilon1[i][j]*darcy_number),0.5) * u_p[i][j]
-                *  (pow((pow(u_p[i][j],2.0) + pow(v_p[i][j],2.0)),0.5))) 
-                *  liga_poros[i][j] - g * epsilon1[i][j];
+        ru[i][j] = 1.0 / (dev_x[i]-dev_x[i-1]) / (dev_y[j]-dev_y[j-1]) * (-ap[i][j]*dev_u_p[i][j]
+                +  dev_aw[i][j] * dev_u_w[i][j] + dev_ae[i][j] * dev_u_e[i][j]
+                +  dev_as[i][j] * dev_u_s[i][j] + dev_an[i][j] * dev_u_n[i][j])
+                -  q_art[i][j] - dev_epsilon1[i][j] * (dev_u_p[i][j]/(re*darcy_number) 
+                +  cf/pow((dev_epsilon1[i][j]*darcy_number),0.5) * dev_u_p[i][j]
+                *  (pow((pow(dev_u_p[i][j],2.0) + pow(dev_v_p[i][j],2.0)),0.5))) 
+                *  dev_liga_poros[i][j] - g * dev_epsilon1[i][j];
     }
 }
 
