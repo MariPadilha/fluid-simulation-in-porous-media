@@ -120,11 +120,11 @@ double *dev_fn, *dev_fs, *dev_fe, *dev_fw;
 double *dev_df, *dev_dn, *dev_ds, *dev_de, *dev_dw;
 double *dev_aw, *dev_as, *dev_ae, *dev_an, *dev_ap;
 double *dev_u_w, *dev_u_e, *dev_u_s, *dev_u_n, *dev_u_p, *dev_v_p;
-double *dev_dudxdx, *dev_dxdvdy;
+double *dev_dudxdx, *dev_dxdvdy, *dev_q_art;
 
 double **ann, **u_ww, **u_ee;
 double **u_ss,  **u_nn, **v_w, **v_ww, **v_e, **v_ee, **v_s, **v_ss;
-double **v_n, **v_nn, **q_art, **dvdydy, **dydudx, **afw;
+double **v_n, **v_nn, **dvdydy, **dydudx, **afw;
 double **aww, **aee, **ass;
 double **afe, **afn, **afs, **dudx, **dvdy, **dzudx, **dzvdy, **dcudx, **dcvdy;
 double **dcdx2, **dcdy2, **dp, **rp, **pi, **res_p, **rz, **zi, **rc, **ci;
@@ -187,6 +187,7 @@ void alocar_globais(){
     cudaMalloc((void**)&dev_v_p, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_dudxdx, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_dxdvdy, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_q_art, sizeof(double*)*(imax+2)*(jmax+1));
 
 ////////////////////////////////////////////////////////
 
@@ -214,7 +215,6 @@ void alocar_globais(){
     v_ss = (double**)malloc(sizeof(double*)*(imax+2));
     v_n = (double**)malloc(sizeof(double*)*(imax+2));
     v_nn = (double**)malloc(sizeof(double*)*(imax+2));
-    q_art = (double**)malloc(sizeof(double*)*(imax+2));
     dvdydy = (double**)malloc(sizeof(double*)*(imax+2));
     dydudx = (double**)malloc(sizeof(double*)*(imax+2));
     for(int i = 0; i < (imax+2); i++){
@@ -234,7 +234,6 @@ void alocar_globais(){
         v_ss[i] = (double*)malloc(sizeof(double)*(jmax+1));
         v_n[i] = (double*)malloc(sizeof(double)*(jmax+1));
         v_nn[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        q_art[i] = (double*)malloc(sizeof(double)*(jmax+1));
         dvdydy[i] = (double*)malloc(sizeof(double)*(jmax+1));
         dydudx[i] = (double*)malloc(sizeof(double)*(jmax+1));
     }
@@ -333,6 +332,7 @@ void desalocar_globais(){
     cudaFree(dev_v_p);
     cudaFree(dev_dudxdx);
     cudaFree(dev_dxdvdy);
+    cudaFree(dev_q_art);
 
     for(int i = 0; i < (imax+2); i++){
         free(aww[i]);
@@ -351,7 +351,6 @@ void desalocar_globais(){
         free(v_ss[i]);
         free(v_n[i]);
         free(v_nn[i]);
-        free(q_art[i]);
         free(dvdydy[i]);
         free(dydudx[i]);
     }
@@ -371,7 +370,6 @@ void desalocar_globais(){
     free(v_ss);
     free(v_n);
     free(v_nn);
-    free(q_art);
     free(dvdydy);
     free(dydudx);
 

@@ -40,11 +40,12 @@ extern double *dev_df, *dev_dn, *dev_ds, *dev_de, *dev_dw;
 extern double *dev_aw, *dev_as, *dev_ae, *dev_an, *dev_ap;
 extern double *dev_u_w, *dev_u_e, *dev_u_s, *dev_u_n, *dev_u_p, *dev_v_p;
 extern double *dev_dudxdx, *dev_dxdvdy;
+extern double *dev_q_art;
 
 extern double **aww, **aee, **ass;
 extern double **ann, **u_ww;
 extern double **u_ee, **u_ss, **u_nn, **v_w, **v_ww, **v_e;
-extern double **v_ee, **v_s, **v_ss, **v_n, **v_nn, **q_art;
+extern double **v_ee, **v_s, **v_ss, **v_n, **v_nn;
 extern double **dvdydy, **dydudx;
 extern double **afw, **afe, **afn, **afs, **dudx, **dvdy, **dzudx, **dzvdy, **dcudx;
 extern double **dcvdy, **dcdx2, **dcdy2, **dp, **rp, **pi, **res_p, **rz, **zi;
