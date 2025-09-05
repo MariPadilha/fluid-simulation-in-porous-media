@@ -121,10 +121,11 @@ double *dev_df, *dev_dn, *dev_ds, *dev_de, *dev_dw;
 double *dev_aw, *dev_as, *dev_ae, *dev_an, *dev_ap;
 double *dev_u_w, *dev_u_e, *dev_u_s, *dev_u_n, *dev_u_p, *dev_v_p;
 double *dev_dudxdx, *dev_dxdvdy, *dev_q_art;
+double *dev_v_w, *dev_v_e, *dev_v_s, *dev_v_n, *dev_dvdydy, *dev_dydudx;
 
 double **ann, **u_ww, **u_ee;
-double **u_ss,  **u_nn, **v_w, **v_ww, **v_e, **v_ee, **v_s, **v_ss;
-double **v_n, **v_nn, **dvdydy, **dydudx, **afw;
+double **u_ss,  **u_nn, **v_ww, **v_ee, **v_ss;
+double **v_nn, **afw;
 double **aww, **aee, **ass;
 double **afe, **afn, **afs, **dudx, **dvdy, **dzudx, **dzvdy, **dcudx, **dcvdy;
 double **dcdx2, **dcdy2, **dp, **rp, **pi, **res_p, **rz, **zi, **rc, **ci;
@@ -163,6 +164,8 @@ void alocar_globais(){
 
 ////////////////////////////matrizes linearizadas////////////////////////////////////
 
+    cudaMalloc((void**)&dev_epsilon1, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_liga_poros, sizeof(double)*(imax+1)*(jmax+1));
     cudaMalloc((void**)&dev_fw, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_fe, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_fs, sizeof(double)*(imax+2)*(jmax+1));
@@ -177,8 +180,6 @@ void alocar_globais(){
     cudaMalloc((void**)&dev_as, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_an, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_ap, sizeof(double)*(imax+2)*(jmax+1));
-    cudaMalloc((void**)&dev_epsilon1, sizeof(double)*(imax+1)*(jmax+1));
-    cudaMalloc((void**)&dev_liga_poros, sizeof(double)*(imax+1)*(jmax+1));
     cudaMalloc((void**)&dev_u_w, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_u_e, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_u_s, sizeof(double)*(imax+2)*(jmax+1));
@@ -187,8 +188,13 @@ void alocar_globais(){
     cudaMalloc((void**)&dev_v_p, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_dudxdx, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_dxdvdy, sizeof(double)*(imax+2)*(jmax+1));
-    cudaMalloc((void**)&dev_q_art, sizeof(double*)*(imax+2)*(jmax+1));
-
+    cudaMalloc((void**)&dev_q_art, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_dvdydy, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_dydudx, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_v_w, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_v_e, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_v_s, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_v_n, sizeof(double)*(imax+2)*(jmax+1));
 ////////////////////////////////////////////////////////
 
     epsilon1 = (double*)malloc(sizeof(double)*(imax+1)*(jmax+1));
@@ -199,6 +205,7 @@ void alocar_globais(){
         flag[i] = (int*)malloc(sizeof(int)*(jmax+1));
     }
     
+
     aww = (double**)malloc(sizeof(double*)*(imax+2));
     aee = (double**)malloc(sizeof(double*)*(imax+2));
     ass = (double**)malloc(sizeof(double*)*(imax+2));
@@ -207,16 +214,10 @@ void alocar_globais(){
     u_ee = (double**)malloc(sizeof(double*)*(imax+2));
     u_ss = (double**)malloc(sizeof(double*)*(imax+2));
     u_nn = (double**)malloc(sizeof(double*)*(imax+2));
-    v_w = (double**)malloc(sizeof(double*)*(imax+2));
     v_ww = (double**)malloc(sizeof(double*)*(imax+2));
-    v_e = (double**)malloc(sizeof(double*)*(imax+2));
     v_ee = (double**)malloc(sizeof(double*)*(imax+2));
-    v_s = (double**)malloc(sizeof(double*)*(imax+2));
     v_ss = (double**)malloc(sizeof(double*)*(imax+2));
-    v_n = (double**)malloc(sizeof(double*)*(imax+2));
     v_nn = (double**)malloc(sizeof(double*)*(imax+2));
-    dvdydy = (double**)malloc(sizeof(double*)*(imax+2));
-    dydudx = (double**)malloc(sizeof(double*)*(imax+2));
     for(int i = 0; i < (imax+2); i++){
         aww[i] = (double*)malloc(sizeof(double)*(jmax+1));
         aee[i] = (double*)malloc(sizeof(double)*(jmax+1));
@@ -226,16 +227,10 @@ void alocar_globais(){
         u_ee[i] = (double*)malloc(sizeof(double)*(jmax+1));
         u_ss[i] = (double*)malloc(sizeof(double)*(jmax+1));
         u_nn[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        v_w[i] = (double*)malloc(sizeof(double)*(jmax+1));
         v_ww[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        v_e[i] = (double*)malloc(sizeof(double)*(jmax+1));
         v_ee[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        v_s[i] = (double*)malloc(sizeof(double)*(jmax+1));
         v_ss[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        v_n[i] = (double*)malloc(sizeof(double)*(jmax+1));
         v_nn[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        dvdydy[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        dydudx[i] = (double*)malloc(sizeof(double)*(jmax+1));
     }
 
     afw = (double**)malloc(sizeof(double*)*(imax+1));                                  
@@ -333,6 +328,12 @@ void desalocar_globais(){
     cudaFree(dev_dudxdx);
     cudaFree(dev_dxdvdy);
     cudaFree(dev_q_art);
+    cudaFree(dev_v_n);
+    cudaFree(dev_v_w);
+    cudaFree(dev_v_s);
+    cudaFree(dev_v_e);
+    cudaFree(dev_dvdydy);
+    cudaFree(dev_dydudx);
 
     for(int i = 0; i < (imax+2); i++){
         free(aww[i]);
@@ -343,17 +344,12 @@ void desalocar_globais(){
         free(u_ee[i]);
         free(u_ss[i]);
         free(u_nn[i]);
-        free(v_w[i]);
         free(v_ww[i]);
-        free(v_e[i]);
         free(v_ee[i]);
-        free(v_s[i]);
         free(v_ss[i]);
-        free(v_n[i]);
         free(v_nn[i]);
-        free(dvdydy[i]);
-        free(dydudx[i]);
     }
+
     free(aww);
     free(aee);
     free(ann);
@@ -362,16 +358,10 @@ void desalocar_globais(){
     free(u_ee);
     free(u_ss);
     free(u_nn);
-    free(v_w);
     free(v_ww);
     free(v_ee);
-    free(v_e);
-    free(v_s);
     free(v_ss);
-    free(v_n);
     free(v_nn);
-    free(dvdydy);
-    free(dydudx);
 
     for(int i = 0; i < (imax+1); i++){
         free(flag[i]);
