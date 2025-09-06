@@ -1,5 +1,6 @@
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
+
 void upwind_Ui(double **um, double **vm, double **p, double **ru, int j);
 void upwind_Uj(double **um, double **vm, double **p, double **ru, int i);
 void upwind_Vi(double **um, double **vm, double **p, double **rv, double **t, int j);
