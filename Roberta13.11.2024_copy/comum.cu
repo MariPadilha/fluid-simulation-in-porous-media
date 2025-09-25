@@ -88,14 +88,6 @@ double s;
 double lf = 1.0;
 double lo = 1.0;
 
-/*//NAMELIST ref
-double Tnu;    // for Methane , 3.51d0 for n-Heptane
-double YF_b; 
-double YO_oo; 
-double Ts;     // Tb  = boiling temperature [k]
-double TnToo;
-*/
-
 //Compute in main, after init. Depends of Ts
 double too;                //dimen ambient temp [k]
 double tsup;
@@ -122,24 +114,28 @@ double *dev_aw, *dev_as, *dev_ae, *dev_an, *dev_ap;
 double *dev_u_w, *dev_u_e, *dev_u_s, *dev_u_n, *dev_u_p, *dev_v_p;
 double *dev_dudxdx, *dev_dxdvdy, *dev_q_art;
 double *dev_v_w, *dev_v_e, *dev_v_s, *dev_v_n, *dev_dvdydy, *dev_dydudx;
+double *dev_ann, *dev_u_ww, *dev_u_ee;
+double *dev_u_ss, *dev_u_nn, *dev_artdivu; 
+double *dev_aww, *dev_aee, *dev_ass;
+double *dev_afe, *dev_afn, *dev_afs, *dev_afw;
+double *dev_v_ww, *dev_v_ee, *dev_v_ss, *dev_dp;
+double *dev_v_nn, *dev_artdivv, *dev_dzudx, *dev_dzvdy;
+double *dev_dcudx, *dev_dcvdy, *dev_res_p;
+double *dev_dudx, *dev_dvdy, *dev_rp, *dev_pi;
+double *dev_res_z, *dev_res_c; 
 
-double **ann, **u_ww, **u_ee;
-double **u_ss,  **u_nn, **v_ww, **v_ee, **v_ss;
-double **v_nn, **afw;
-double **aww, **aee, **ass;
-double **afe, **afn, **afs, **dudx, **dvdy, **dzudx, **dzvdy, **dcudx, **dcvdy;
-double **dcdx2, **dcdy2, **dp, **rp, **pi, **res_p, **rz, **zi, **rc, **ci;
-double **artdivu, **artdivv, **res_z, **res_c; 
+double **dcdx2, **dcdy2, **zi, **ci;
 
-void calcular(){
+void calcular(int n_imax, int n_itc){
     l_c = ao;
     v_c = v_i;
-    cf = 1.75 / (150.0 * pow(pow(porosidade,3.0), 0.5));                                  //1.75 / pow((150.0 * pow(porosidade,3.0)), 0.5);
+    cf = 1.75 / (150.0 * pow(pow(porosidade,3.0), 0.5));
     hvert = y_up + y_down;
-    imax = 10;
+    imax = n_imax;
     dx_c = lhori / (imax-1);
     jmax = (int)((hvert / dx_c) + 1);
     invfr2 = 1.0 / (fr * fr);
+    iterations.itc_max = n_itc;
 }
 
 void alocar_globais(){
@@ -164,8 +160,6 @@ void alocar_globais(){
 
 ////////////////////////////matrizes linearizadas////////////////////////////////////
 
-    cudaMalloc((void**)&dev_epsilon1, sizeof(double)*(imax+1)*(jmax+1));
-    cudaMalloc((void**)&dev_liga_poros, sizeof(double)*(imax+1)*(jmax+1));
     cudaMalloc((void**)&dev_fw, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_fe, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_fs, sizeof(double)*(imax+2)*(jmax+1));
@@ -195,6 +189,39 @@ void alocar_globais(){
     cudaMalloc((void**)&dev_v_e, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_v_s, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_v_n, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_aww, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_aee, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_ass, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_ann, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_u_ww, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_u_ee, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_u_ss, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_u_nn, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_epsilon1, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_liga_poros, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_afw, sizeof(double)*(imax+1)*(jmax+1));                                  
+    cudaMalloc((void**)&dev_afe, sizeof(double)*(imax+1)*(jmax+1));                                  
+    cudaMalloc((void**)&dev_afn, sizeof(double)*(imax+1)*(jmax+1));                                  
+    cudaMalloc((void**)&dev_afs, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_artdivu, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_v_ww, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_v_ee, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_v_ss, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_v_nn, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_artdivv, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_dzudx, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_dzvdy, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_dp, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_dcudx, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_dcvdy, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_dudx, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_dvdy, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_rp, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_pi, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_res_p, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_res_z, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_res_c, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_zi, sizeof(double)*(imax+1)*(jmax+1));
 ////////////////////////////////////////////////////////
 
     epsilon1 = (double*)malloc(sizeof(double)*(imax+1)*(jmax+1));
@@ -204,84 +231,14 @@ void alocar_globais(){
     for(int i = 0; i < (imax+1); i++){
         flag[i] = (int*)malloc(sizeof(int)*(jmax+1));
     }
-    
 
-    aww = (double**)malloc(sizeof(double*)*(imax+2));
-    aee = (double**)malloc(sizeof(double*)*(imax+2));
-    ass = (double**)malloc(sizeof(double*)*(imax+2));
-    ann = (double**)malloc(sizeof(double*)*(imax+2));
-    u_ww = (double**)malloc(sizeof(double*)*(imax+2));
-    u_ee = (double**)malloc(sizeof(double*)*(imax+2));
-    u_ss = (double**)malloc(sizeof(double*)*(imax+2));
-    u_nn = (double**)malloc(sizeof(double*)*(imax+2));
-    v_ww = (double**)malloc(sizeof(double*)*(imax+2));
-    v_ee = (double**)malloc(sizeof(double*)*(imax+2));
-    v_ss = (double**)malloc(sizeof(double*)*(imax+2));
-    v_nn = (double**)malloc(sizeof(double*)*(imax+2));
-    for(int i = 0; i < (imax+2); i++){
-        aww[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        aee[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        ass[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        ann[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        u_ww[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        u_ee[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        u_ss[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        u_nn[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        v_ww[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        v_ee[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        v_ss[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        v_nn[i] = (double*)malloc(sizeof(double)*(jmax+1));
-    }
-
-    afw = (double**)malloc(sizeof(double*)*(imax+1));                                  
-    afe = (double**)malloc(sizeof(double*)*(imax+1));                                  
-    afn = (double**)malloc(sizeof(double*)*(imax+1));                                  
-    afs = (double**)malloc(sizeof(double*)*(imax+1));
-    dudx = (double**)malloc(sizeof(double*)*(imax+1));
-    dvdy = (double**)malloc(sizeof(double*)*(imax+1));
-    dzudx = (double**)malloc(sizeof(double*)*(imax+1));
-    dzvdy = (double**)malloc(sizeof(double*)*(imax+1));
-    dcudx = (double**)malloc(sizeof(double*)*(imax+1));
-    dcvdy = (double**)malloc(sizeof(double*)*(imax+1));
     dcdx2 = (double**)malloc(sizeof(double*)*(imax+1));
     dcdy2 = (double**)malloc(sizeof(double*)*(imax+1));
-    dp = (double**)malloc(sizeof(double*)*(imax+1));
-    rp = (double**)malloc(sizeof(double*)*(imax+1));
-    pi = (double**)malloc(sizeof(double*)*(imax+1));
-    res_p = (double**)malloc(sizeof(double*)*(imax+1));
-    rz = (double**)malloc(sizeof(double*)*(imax+1));
-    zi = (double**)malloc(sizeof(double*)*(imax+1));
-    rc = (double**)malloc(sizeof(double*)*(imax+1));
     ci = (double**)malloc(sizeof(double*)*(imax+1));
-    artdivu = (double**)malloc(sizeof(double*)*(imax+1));
-    artdivv = (double**)malloc(sizeof(double*)*(imax+1));
-    res_z = (double**)malloc(sizeof(double*)*(imax+1));
-    res_c = (double**)malloc(sizeof(double*)*(imax+1));
     for(int i = 0; i < (imax+1); i++){
-        afw[i] = (double*)malloc(sizeof(double)*(jmax+1));                                 
-        afe[i] = (double*)malloc(sizeof(double)*(jmax+1));                                  
-        afn[i] = (double*)malloc(sizeof(double)*(jmax+1));                                  
-        afs[i] = (double*)malloc(sizeof(double)*(jmax+1)); 
-        dudx[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        dvdy[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        dzudx[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        dzvdy[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        dcudx[i] = (double*)malloc(sizeof(double)*(jmax+1));  
-        dcvdy[i] = (double*)malloc(sizeof(double)*(jmax+1));
         dcdx2[i] = (double*)malloc(sizeof(double)*(jmax+1));
         dcdy2[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        dp[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        rp[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        pi[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        res_p[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        rz[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        zi[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        rc[i] = (double*)malloc(sizeof(double)*(jmax+1));
         ci[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        artdivu[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        artdivv[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        res_z[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        res_c[i] = (double*)malloc(sizeof(double)*(jmax+1));
     }
 }
 
@@ -334,87 +291,48 @@ void desalocar_globais(){
     cudaFree(dev_v_e);
     cudaFree(dev_dvdydy);
     cudaFree(dev_dydudx);
-
-    for(int i = 0; i < (imax+2); i++){
-        free(aww[i]);
-        free(ass[i]);
-        free(aee[i]);
-        free(ann[i]);
-        free(u_ww[i]);
-        free(u_ee[i]);
-        free(u_ss[i]);
-        free(u_nn[i]);
-        free(v_ww[i]);
-        free(v_ee[i]);
-        free(v_ss[i]);
-        free(v_nn[i]);
-    }
-
-    free(aww);
-    free(aee);
-    free(ann);
-    free(ass);
-    free(u_ww);
-    free(u_ee);
-    free(u_ss);
-    free(u_nn);
-    free(v_ww);
-    free(v_ee);
-    free(v_ss);
-    free(v_nn);
+    cudaFree(dev_aww);
+    cudaFree(dev_aee);
+    cudaFree(dev_ann);
+    cudaFree(dev_ass);
+    cudaFree(dev_u_ww);
+    cudaFree(dev_u_ee);
+    cudaFree(dev_u_ss);
+    cudaFree(dev_u_nn);
+    cudaFree(dev_afw);                             
+    cudaFree(dev_afe);                             
+    cudaFree(dev_afn);                             
+    cudaFree(dev_afs);
+    cudaFree(dev_artdivu);
+    cudaFree(dev_v_ww);
+    cudaFree(dev_v_ee);
+    cudaFree(dev_v_ss);
+    cudaFree(dev_v_nn);
+    cudaFree(dev_artdivv);
+    cudaFree(dev_dzudx);
+    cudaFree(dev_dzvdy);
+    cudaFree(dev_dp);
+    cudaFree(dev_dcudx);
+    cudaFree(dev_dcvdy);
+    cudaFree(dev_dudx);
+    cudaFree(dev_dvdy);
+    cudaFree(dev_rp);
+    cudaFree(dev_pi);
+    cudaFree(dev_res_p);
+    cudaFree(dev_res_z);
+    cudaFree(dev_res_c);
+    cudaFree(dev_zi);
 
     for(int i = 0; i < (imax+1); i++){
         free(flag[i]);
-        free(afw[i]);                         
-        free(afe[i]);                         
-        free(afn[i]); 
-        free(afs[i]); 
-        free( dudx[i]);
-        free(dvdy[i]);
-        free(dzudx[i]);
-        free(dzvdy[i]);
-        free(dcudx[i]);  
-        free(dcvdy[i]);
         free(dcdx2[i]);
         free(dcdy2[i]);
-        free(dp[i]);
-        free(rp[i]);
-        free(pi[i]);
-        free(res_p[i]);
-        free(rz[i]);
-        free(zi[i]);
-        free(rc[i]);
         free(ci[i]);
-        free(artdivu[i]);
-        free(artdivv[i]);
-        free(res_z[i]);
-        free(res_c[i]);
     }
     free(epsilon1);
     free(liga_poros);
     free(flag);
-    free(afw);                             
-    free(afe);                             
-    free(afn);                             
-    free(afs);
-    free(dudx);
-    free(dvdy);
-    free(dzudx);
-    free(dzvdy);
-    free(dcudx);
-    free(dcvdy);
     free(dcdx2);
     free(dcdy2);
-    free(dp);
-    free(rp);
-    free(pi);
-    free(res_p);
-    free(rz);
-    free(zi);
-    free(rc);
     free(ci);
-    free(artdivu);
-    free(artdivv);
-    free(res_z);
-    free(res_c);
 }

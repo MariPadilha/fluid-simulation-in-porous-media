@@ -6,8 +6,8 @@ void init(){
 
     //--- iterations values ---
     arquivo = fopen("input/iterations.dat", "r+");
-    resultado_arquivo = fscanf(arquivo, "%d %d %d %d %d %lf %lf %lf %lf %lf %lf %d",
-           &iterations.itc_max, &iterations.nc, &iterations.n_tr, &iterations.n_out, &iterations.n_vort,
+    resultado_arquivo = fscanf(arquivo, "%d %d %d %d %lf %lf %lf %lf %lf %lf %d",
+           &iterations.nc, &iterations.n_tr, &iterations.n_out, &iterations.n_vort,
            &iterations.beta, &iterations.b_art, &iterations.dtau_f, &iterations.final_time,
            &iterations.eps, &iterations.eps_mass, &iterations.start_mode);
     fclose(arquivo);

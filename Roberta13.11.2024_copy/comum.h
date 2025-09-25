@@ -43,16 +43,20 @@ extern double *dev_dudxdx, *dev_dxdvdy;
 extern double *dev_q_art;
 extern double *dev_dvdydy, *dev_dydudx;
 extern double *dev_v_w, *dev_v_e, *dev_v_s, *dev_v_n;
+extern double *dev_aww, *dev_aee, *dev_ass;
+extern double *dev_ann, *dev_u_ww, *dev_artdivu;
+extern double *dev_u_ee, *dev_u_ss, *dev_u_nn;
+extern double *dev_afw, *dev_afe, *dev_afn, *dev_afs;
+extern double *dev_v_ww, *dev_artdivv, *dev_dcudx;
+extern double *dev_v_ee, *dev_v_ss, *dev_dcvdy, *dev_v_nn;
+extern double *dev_dzudx, *dev_dzvdy, *dev_dp;
+extern double *dev_dudx, *dev_dvdy, *dev_rp, *dev_pi;
+extern double *dev_res_p, *dev_res_z, *dev_res_c;
 
-extern double **aww, **aee, **ass;
-extern double **ann, **u_ww;
-extern double **u_ee, **u_ss, **u_nn, **v_ww;
-extern double **v_ee, **v_ss, **v_nn;
-extern double **afw, **afe, **afn, **afs, **dudx, **dvdy, **dzudx, **dzvdy, **dcudx;
-extern double **dcvdy, **dcdx2, **dcdy2, **dp, **rp, **pi, **res_p, **rz, **zi;
-extern double **rc, **ci, **artdivu, **artdivv, **res_z, **res_c; 
+extern double **dcdx2, **dcdy2;
+extern double *dev_ci, *dev_zi; 
 
-void calcular();
+void calcular(int n_imax, int n_itc);
 void alocar_globais();
 void desalocar_globais();
 #endif

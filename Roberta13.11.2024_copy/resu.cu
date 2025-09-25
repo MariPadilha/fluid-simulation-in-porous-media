@@ -1,127 +1,105 @@
 #include "comum.h"
-#define idx 1
+#define idx i*(jmax+1)+j
 
-__global__ void calc_resu_parte1(){
-    for(j = 3; j <= jmax-2; j++){
-        for(i = 3; i <= imax-1; i++){
-            fn[i][j] = 0.5 * (vm[i][j+1] + vm[i-1][j+1]) * areau_n[i] / epsilon1[i][j];
-            fs[i][j] = 0.5 * (vm[i][j] + vm[i-1][j]) * areau_s[i] / epsilon1[i][j];
-            fe[i][j] = 0.5 * (um[i+1][j] + um[i][j]) * areau_e[j] / epsilon1[i][j];
-            fw[i][j] = 0.5 * (um[i][j] + um[i-1][j]) * areau_w[j] / epsilon1[i][j];
-            df[i][j] = fe[i][j] - fw[i][j] + fn[i][j] - fs[i][j];
-            dn[i][j] = (epsilon1[i][j]/re) * areau_n[i] / (y[j+1] - y[j]);
-            ds[i][j] = (epsilon1[i][j]/re) * areau_s[i] / (y[j] - y[j-1]);
-            de[i][j] = (epsilon1[i][j]/re) * areau_e[j] / (xm[i+1] - xm[i]);
-            dw[i][j] = (epsilon1[i][j]/re) * areau_w[j] / (xm[i] - xm[i-1]);
-        }
-    }
-}
+__global__ void calc_resu(double *dev_fn, double *dev_fs, double *dev_fe, double *dev_fw, double *dev_df, double *dev_dn, double *dev_ds, double *dev_de, 
+	double *dev_dw, double *dev_areau_e, double *dev_areau_n, double *dev_areau_s, double *dev_areau_w, double *dev_epsilon1, double *dev_y, double *dev_x,
+	double *dev_xm, double *dev_afw, double *dev_afe, double *dev_afn, double *dev_afs, double *dev_aw, double *dev_ae, double *dev_as, double *dev_an,
+    double *dev_aww, double *dev_aee, double *dev_ass, double *dev_ann, double *dev_ap, double *dev_u_e, double *dev_u_ee, double *dev_u_n, double *dev_u_nn, 
+	double *dev_u_p, double *dev_u_s, double *dev_u_ss, double *dev_u_w, double *dev_u_ww, double *dev_v_p, double *dev_ym, double *dev_dudxdx, double *dev_dxdvdy,
+	double *dev_q_art, double *dev_artdivu, double *dev_liga_poros, double b_art, int imax, int jmax, double re, double darcy_number, double g, double cf,
+	double *dev_um, double *dev_vm, double **p, double *dev_ru){
 
-__global__ void calc_resu_parte2(){
+    int i = blockIdx.x * blockDim.x + threadIdx.x + 3;
+    int j = blockIdx.y * blockDim.y + threadIdx.y + 3;
+	if(i <= imax-1 && j <= jmax-2){
+		dev_fn[idx] = 0.5 * (dev_vm[i*(jmax+2)+(j+1)] + dev_vm[(i-1)*(jmax+2)+(j+1)]) * dev_areau_n[i] / dev_epsilon1[idx];
+		dev_fs[idx] = 0.5 * (dev_vm[i*(jmax+2)+j] + dev_vm[(i-1)*(jmax+2)+j]) * dev_areau_s[i] / dev_epsilon1[idx];
+		dev_fe[idx] = 0.5 * (dev_um[(i+1)*(jmax+1)+j] + dev_um[idx]) * dev_areau_e[j] / dev_epsilon1[idx];
+		dev_fw[idx] = 0.5 * (dev_um[idx] + dev_um[(i-1)*(jmax+1)+j]) * dev_areau_w[j] / dev_epsilon1[idx];
+		dev_df[idx] = dev_fe[idx] - dev_fw[idx] + dev_fn[idx] - dev_fs[idx];
+		dev_dn[idx] = (dev_epsilon1[idx]/re) * dev_areau_n[i] / (dev_y[j+1] - dev_y[j]);
+		dev_ds[idx] = (dev_epsilon1[idx]/re) * dev_areau_s[i] / (dev_y[j] - dev_y[j-1]);
+		dev_de[idx] = (dev_epsilon1[idx]/re) * dev_areau_e[j] / (dev_xm[i+1] - dev_xm[i]);
+		dev_dw[idx] = (dev_epsilon1[idx]/re) * dev_areau_w[j] / (dev_xm[i] - dev_xm[i-1]);
 
-    for(j = 3; j <= jmax-2; j++){
-        for(i = 3; i <= imax-1; i++){
+        //quick
+		dev_afw[idx] = (double)(dev_fw[idx] > 0.0);
+		dev_afe[idx] = (double)(dev_fe[idx] > 0.0);
+		dev_afn[idx] = (double)(dev_fn[idx] > 0.0);
+		dev_afs[idx] = (double)(dev_fs[idx] > 0.0);
+        dev_aw[idx] = dev_dw[idx] + 0.75  * dev_afw[idx] * dev_fw[idx]
+					+  0.125 * dev_afe[idx] * dev_fe[idx]
+					+  0.375 * (1.0 - dev_afw[idx]) * dev_fw[idx];
 
-        aw[i][j] = dw[i][j] + 0.75  * afw[i][j] * fw[i][j]
-					+  0.125 * afe[i][j] * fe[i][j]
-					+  0.375 * (1.0 - afw[i][j]) * fw[i][j];
+		dev_ae[idx] = dev_de[idx] - 0.375 * dev_afe[idx] * dev_fe[idx]
+				-  0.75  * (1.0 - dev_afe[idx]) * dev_fe[idx]
+				-  0.125 * (1.0 - dev_afw[idx]) * dev_fw[idx];
 
-			ae[i][j] = de[i][j] - 0.375 * afe[i][j] * fe[i][j]
-					-  0.75  * (1.0 - afe[i][j]) * fe[i][j]
-					-  0.125 * (1.0 - afw[i][j]) * fw[i][j];
+		dev_as[idx] = dev_ds[idx] + 0.75 * dev_afs[idx] * dev_fs[idx]
+				+  0.125 * dev_afn[idx] * dev_fn[idx]
+				+  0.375 * (1.0 - dev_afs[idx]) * dev_fs[idx];
 
-			as[i][j] = ds[i][j] + 0.75 * afs[i][j] * fs[i][j]
-					+  0.125 * afn[i][j] * fn[i][j]
-					+  0.375 * (1.0 - afs[i][j]) * fs[i][j];
+		dev_an[idx] = dev_dn[idx] - 0.375 * dev_afn[idx] * dev_fn[idx]
+				-  0.75 * (1.0 - dev_afn[idx]) * dev_fn[idx]
+				-  0.125 * (1.0 - dev_afs[idx]) * dev_fs[idx];
 
-			an[i][j] = dn[i][j] - 0.375 * afn[i][j] * fn[i][j]
-					-  0.75 * (1.0 - afn[i][j]) * fn[i][j]
-					-  0.125 * (1.0 - afs[i][j]) * fs[i][j];
+		dev_aww[idx] = -0.125 * dev_afw[idx] * dev_fw[idx];
+		dev_aee[idx] =  0.125 * (1.0 - dev_afe[idx]) * dev_fe[idx];
+		dev_ass[idx] = -0.125 * dev_afs[idx] * dev_fs[idx];
+		dev_ann[idx] =  0.125 * (1.0 - dev_afn[idx]) * dev_fn[idx];
+		dev_ap[idx] = dev_aw[idx] + dev_ae[idx] + dev_as[idx] + dev_an[idx] 
+				+  dev_aww[idx] + dev_aee[idx] + dev_ass[idx] + dev_ann[idx] + dev_df[idx];
+		//end Quick//////////////////////////////////////////////////////////////
 
-			aww[i][j] = -0.125 * afw[i][j] * fw[i][j];
-			aee[i][j] =  0.125 * (1.0 - afe[i][j]) * fe[i][j];
-			ass[i][j] = -0.125 * afs[i][j] * fs[i][j];
-			ann[i][j] =  0.125 * (1.0 - afn[i][j]) * fn[i][j];
-			ap[i][j] = aw[i][j] + ae[i][j] + as[i][j] + an[i][j] 
-					+  aww[i][j] + aee[i][j] + ass[i][j] + ann[i][j] + df[i][j];
-			//end Quick//////////////////////////////////////////////////////////////
+		dev_u_w[idx]  = dev_um[(i-1)*(jmax+1)+j];
+		dev_u_ww[idx] = dev_um[(i-2)*(jmax+1)+j];
+		dev_u_e[idx]  = dev_um[(i+1)*(jmax+1)+j];
+		dev_u_ee[idx] = dev_um[(i+2)*(jmax+1)+j];
+		dev_u_s[idx]  = dev_um[i*(jmax+1)+(j-1)];
+		dev_u_ss[idx] = dev_um[i*(jmax+1)+(j-2)];
+		dev_u_n[idx]  = dev_um[i*(jmax+1)+(j+1)];
+		dev_u_nn[idx] = dev_um[i*(jmax+1)+(j+2)];        
+		dev_u_p[idx]  = dev_um[idx];
+		dev_v_p[idx]  = dev_vm[i*(jmax+2)+j];
 
-			u_w[i][j]  = um[i-1][j];
-			u_ww[i][j] = um[i-2][j];
-			u_e[i][j]  = um[i+1][j];
-			u_ee[i][j] = um[i+2][j];
-			u_s[i][j]  = um[i][j-1];
-			u_ss[i][j] = um[i][j-2];
-			u_n[i][j]  = um[i][j+1];
-			u_nn[i][j] = um[i][j+2];        
-			u_p[i][j]  = um[i][j];
-			v_p[i][j]  = vm[i][j];
+		dev_dudxdx[idx] = dev_areau_e[j] * (dev_u_e[idx] - dev_u_p[idx]) / (dev_xm[i+1] - dev_xm[i])
+					-  dev_areau_w[j] * (dev_u_p[idx] - dev_u_w[idx]) / (dev_xm[i] - dev_xm[i-1]);
+	
+		dev_dxdvdy[idx] = dev_areau_e[j] * (dev_vm[i*(jmax+2)+(j+1)] - dev_vm[i*(jmax+2)+j]) / (dev_ym[j+1] - dev_ym[j])
+					-  dev_areau_w[j] * (dev_vm[(i-1)*(jmax+2)+(j+1)] - dev_vm[(i-1)*(jmax+2)+j]) / (dev_ym[j+1] - dev_ym[j]);
+		
+		dev_artdivu[idx] = -b_art * (dev_dudxdx[idx] + dev_dxdvdy[idx]);   
+		
+		//bulk artificial viscosity term from Ramshaw(1990)
+		dev_q_art[idx] = dev_epsilon1[idx] * (p[i][j] - p[i-1][j]) / (dev_x[i] - dev_x[i-1]) + dev_artdivu[idx];
 
-			dudxdx[i][j] = areau_e[j] * (u_e[i][j] - u_p[i][j]) / (xm[i+1] - xm[i])
-					    -  areau_w[j] * (u_p[i][j] - u_w[i][j]) / (xm[i] - xm[i-1]);
-     
-			dxdvdy[i][j] = areau_e[j] * (vm[i][j+1] - vm[i][j]) / (ym[j+1] - ym[j])
-                        -  areau_w[j] * (vm[i-1][j+1] - vm[i-1][j]) / (ym[j+1] - ym[j]);
-			
-			artdivu[i][j] = -iterations.b_art * (dudxdx[i][j] + dxdvdy[i][j]);   
-			
-			//bulk artificial viscosity term from Ramshaw(1990)
-			q_art[i][j] = epsilon1[i][j] * (p[i][j] - p[i-1][j]) / (x[i] - x[i-1]) + artdivu[i][j];
-
-			ru[i][j] = 1.0 / (x[i]-x[i-1]) / (y[j] - y[j-1]) * (-ap[i][j] * u_p[i][j]
-					+  aww[i][j] * u_ww[i][j] + aw[i][j] * u_w[i][j] 
-					+  aee[i][j] * u_ee[i][j] + ae[i][j] * u_e[i][j]  
-					+  ass[i][j] * u_ss[i][j] + as[i][j] * u_s[i][j]  
-					+  ann[i][j] * u_nn[i][j] + an[i][j] * u_n[i][j]) 
-					-  q_art[i][j] - epsilon1[i][j] * (u_p[i][j] / (re * darcy_number) 
-                    +  cf / (pow((epsilon1[i][j] * darcy_number),0.5)) * u_p[i][j] 
-                    *  (pow((pow(u_p[i][j],2.0) + pow(v_p[i][j],2.0)), 0.5))) * liga_poros[i][j] 
-                    -  g * epsilon1[i][j];
-		}
+		dev_ru[idx] = 1.0 / (dev_x[i]-dev_x[i-1]) / (dev_y[j] - dev_y[j-1]) * (-dev_ap[idx] * dev_u_p[idx]
+				+  dev_aww[idx] * dev_u_ww[idx] + dev_aw[idx] * dev_u_w[idx] 
+				+  dev_aee[idx] * dev_u_ee[idx] + dev_ae[idx] * dev_u_e[idx]  
+				+  dev_ass[idx] * dev_u_ss[idx] + dev_as[idx] * dev_u_s[idx]  
+				+  dev_ann[idx] * dev_u_nn[idx] + dev_an[idx] * dev_u_n[idx]) 
+				-  dev_q_art[idx] - dev_epsilon1[idx] * (dev_u_p[idx] / (re * darcy_number) 
+				+  cf / (pow((dev_epsilon1[idx] * darcy_number),0.5)) * dev_u_p[idx] 
+				*  (pow((pow(dev_u_p[idx],2.0) + pow(dev_v_p[idx],2.0)), 0.5))) * dev_liga_poros[idx] 
+				-  g * dev_epsilon1[idx];
     }
 }
 
 //resu////////////
-void RESU(double **um, double **vm, double **p, double **ru){
-    int i, j;   
+void RESU(double *dev_um, double *dev_vm, double **p, double *dev_ru){
+    int threads = 256;
+    dim3 blocks = grid_1d((imax-1-3)*(jmax-2-3), threads);
 
-    calc_resu_parte1<<<thrads, blocks>>>>
+    calc_resu<<<blocks, threads>>>(dev_fn, dev_fs, dev_fe, dev_fw, dev_df, dev_dn, dev_ds, dev_de, 
+	dev_dw, dev_areau_e, dev_areau_n, dev_areau_s, dev_areau_w, dev_epsilon1, dev_y, dev_x,
+	dev_xm, dev_afw, dev_afe, dev_afn, dev_afs, dev_aw, dev_ae, dev_as, dev_an,
+    dev_aww, dev_aee, dev_ass, dev_ann, dev_ap, dev_u_e, dev_u_ee, dev_u_n, dev_u_nn, 
+	dev_u_p, dev_u_s, dev_u_ss, dev_u_w, dev_u_ww, dev_v_p, dev_ym, dev_dudxdx, dev_dxdvdy,
+	dev_q_art, dev_artdivu, dev_liga_poros, iterations.b_art, imax, jmax, re, darcy_number, g, cf,
+	dev_um, dev_vm, p, dev_ru);
 
-    for(j = 3; j <= jmax-2; j++){
-        for(i = 3; i <= imax-1; i++){
-
-            //quick
-            if(fw[i][j] > 0.0){
-            	afw[i][j] = 1.0;
-			}else if(fw[i][j] < 0.0){
-				afw[i][j] = 0.0;
-			}
-
-			if(fe[i][j] > 0.0){
-				afe[i][j] = 1.0;
-			}else if(fe[i][j] < 0.0){
-				afe[i][j] = 0.0;
-			}
-
-			if(fn[i][j] > 0.0){
-				afn[i][j] = 1.0;
-			}else if(fn[i][j] < 0.0){
-				afn[i][j] = 0.0;
-			}
-
-			if(fs[i][j] > 0.0){
-				afs[i][j] = 1.0;
-			}else if(fs[i][j] < 0.0){
-				afs[i][j] = 0.0;
-			}
-
-        }
-    }
-
-    calc_resu_parte2<<<thread, blocks>>>;
-
-    upwind_Ui(um,vm,p,ru,2);
-    upwind_Ui(um,vm,p,ru,jmax-1);
-    upwind_Uj(um,vm,p,ru,2);
-    upwind_Uj(um,vm,p,ru,imax);
+    upwind_Ui(dev_um,dev_vm,p,dev_ru,2);
+    upwind_Ui(dev_um,dev_vm,p,dev_ru,jmax-1);
+    upwind_Uj(dev_um,dev_vm,p,dev_ru,2);
+    upwind_Uj(dev_um,dev_vm,p,dev_ru,imax);
 }

@@ -1,34 +1,42 @@
 #include "comum.h"
-#define idx 1
+#define idx i*(jmax+1)+j
 
 
 //--- ResZ ---
-__global__ void calc_resz(double **um_n, double **vm_n, double **z, double **rz){
-    int i, j;
+__global__ void calc_resz(double *dev_dzudx, double *dev_dzvdy, double *dev_de, double *dev_dw, double *dev_dn, double *dev_ds, double *dev_dp, 
+    double *dev_xm, double *dev_x, double *dev_y, double *dev_ym, double *dev_areau_e, double *dev_areau_w, double *dev_areav_n,
+    double *dev_areav_s, double *dev_epsilon1, double *dev_liga_poros, double pe, int imax, int jmax,
+    double *dev_um_n, double *dev_vm_n, double **z, double *dev_rz){
 
-    for(j = 2; j <= jmax-1; j++){
-        for(i = 2; i <= imax-1; i++){
-            dzudx[i][j] = 0.5 * (z[i+1][j]+z[i][j]) * um_n[i+1][j] * areau_e[j]
-                        - 0.5 * (z[i-1][j]+z[i][j]) * um_n[i][j] * areau_w[j];
-            dzvdy[i][j] = 0.5 * (z[i][j+1]+z[i][j]) * vm_n[i][j+1] * areav_n[i]
-                        - 0.5 * (z[i][j-1]+z[i][j]) * vm_n[i][j] * areav_s[i];
+    int i = blockIdx.x * blockDim.x + threadIdx.x + 2;
+    int j = blockIdx.y * blockDim.y + threadIdx.y + 2;
+    
+    if(i <= imax-1 && j <= jmax-1){
+        dev_dzudx[idx] = 0.5 * (z[i+1][j]+z[i][j]) * dev_um_n[(i+1)*(jmax+1)+j] * dev_areau_e[j]
+                    - 0.5 * (z[i-1][j]+z[i][j]) * dev_um_n[idx] * dev_areau_w[j];
+        dev_dzvdy[idx] = 0.5 * (z[i][j+1]+z[i][j]) * dev_vm_n[i*(jmax+2)+(j+1)] * dev_areav_n[i]
+                    - 0.5 * (z[i][j-1]+z[i][j]) * dev_vm_n[i*(jmax+2)+j] * dev_areav_s[i];
 
-            de[i][j] = (ym[j+1]-ym[j]) * (1.0/pe) / (x[i+1]-x[i]);  
-            dw[i][j] = (ym[j+1]-ym[j]) * (1.0/pe) / (x[i]-x[i-1]); 
-            dn[i][j] = (xm[i+1]-xm[i]) * (1.0/pe) / (y[j+1]-y[j]);  
-            ds[i][j] = (xm[i+1]-xm[i]) * (1.0/pe) / (y[j]-y[j-1]);  
-            dp[i][j] = de[i][j] + dw[i][j] + dn[i][j] + ds[i][j];
+        dev_de[idx] = (dev_ym[j+1]-dev_ym[j]) * (1.0/pe) / (dev_x[i+1]-dev_x[i]);  
+        dev_dw[idx] = (dev_ym[j+1]-dev_ym[j]) * (1.0/pe) / (dev_x[i]-dev_x[i-1]); 
+        dev_dn[idx] = (dev_xm[i+1]-dev_xm[i]) * (1.0/pe) / (dev_y[j+1]-dev_y[j]);  
+        dev_ds[idx] = (dev_xm[i+1]-dev_xm[i]) * (1.0/pe) / (dev_y[j]-dev_y[j-1]);  
+        dev_dp[idx] = dev_de[idx] + dev_dw[idx] + dev_dn[idx] + dev_ds[idx];
 
-            rz[i][j] = 1.0 / (xm[i+1]-xm[i]) / (ym[j+1]-ym[j]) 
-                    *  (-dp[i][j]*z[i][j] + de[i][j]*z[i+1][j] 
-                    +  dw[i][j]*z[i-1][j] + dn[i][j]*z[i][j+1] 
-                    +  ds[i][j]*z[i][j-1] - (1.0-liga_poros[i][j])
-                    *  (dzudx[i][j]+dzvdy[i][j])) / (liga_poros[i][j]
-                    *  (epsilon1[i][j]-1.0)+1.0);
-        }
+        dev_rz[idx] = 1.0 / (dev_xm[i+1]-dev_xm[i]) / (dev_ym[j+1]-dev_ym[j]) 
+                *  (-dev_dp[idx]*z[i][j] + dev_de[idx]*z[i+1][j] 
+                +  dev_dw[idx]*z[i-1][j] + dev_dn[idx]*z[i][j+1] 
+                +  dev_ds[idx]*z[i][j-1] - (1.0-dev_liga_poros[idx])
+                *  (dev_dzudx[idx]+dev_dzvdy[idx])) / (dev_liga_poros[idx]
+                *  (dev_epsilon1[idx]-1.0)+1.0);
     }
 }
 
-void RESZ(double **um_n, double **vm_n, double **z, double **rz){
-    calc_resz<<<thread, blocks>>>
+void RESZ(double *dev_um_n, double *dev_vm_n, double **z, double *dev_rz){
+    int threads = 256;
+    dim3 blocks = grid_1d((imax-1-2)*(jmax-1-2), threads);
+    
+    calc_resz<<<blocks, threads>>>(dev_dzudx, dev_dzvdy, dev_de, dev_dw, dev_dn, dev_ds, dev_dp, 
+    dev_xm, dev_x, dev_y, dev_ym, dev_areau_e, dev_areau_w, dev_areav_n,
+    dev_areav_s, dev_epsilon1, dev_liga_poros, pe, imax, jmax, dev_um_n, dev_vm_n, z, dev_rz);
 }

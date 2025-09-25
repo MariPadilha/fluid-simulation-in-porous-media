@@ -66,7 +66,7 @@ void transient(double **u, double **v, double **p, double **t, double **c, int t
     arquivo = fopen("transient/data/grid.dat", "w");
     for(i = 1; i <= imax; i++){
         for(j = 1; j <= jmax; j++){
-            fprintf(arquivo, "%lf %lf\n", x[i], y[j]);
+            fprintf(arquivo, "%lf %lf\n", dev_x[i], dev_y[j]);
         }
     }
     fclose(arquivo);
@@ -84,7 +84,7 @@ void transient(double **u, double **v, double **p, double **t, double **c, int t
 
     for(i = 1; i <= imax; i++){
         for(j = 1; j <= jmax; j++){
-            fprintf(arquivo, "%14.4f %14.4f %14.4f\n", x[i], y[j], 0.0);
+            fprintf(arquivo, "%14.4f %14.4f %14.4f\n", dev_x[i], dev_y[j], 0.0);
         }
     }
 

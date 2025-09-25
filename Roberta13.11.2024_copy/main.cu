@@ -4,37 +4,47 @@
 //Versteeg, H. K., and W. Malalasekera. 
 //"An introduction to computational Fluid Dynamics, The finite volume control, ed." (1995).
 #include "comum.h"
+#define N_IMAX 10
+#define N_ITC 2
 
-int main(){
-    calcular();         // define imax, jmax, dx_c, etc.
+__global__ void atualizar_matrizes_linearizadas(double *origem, double *destino, int tamanhoLinha, int tamanhoColuna, int inicio, int coluna){
+    int i = blockIdx.x * blockDim.x + threadIdx.x + inicio;
+    int j = blockIdx.y * blockDim.y + threadIdx.y + inicio;
+    
+    if(i <= tamanhoLinha && j <= tamanhoColuna){
+        destino[i*(coluna)+j] = origem[i*(coluna)+j];
+    }
+}
+
+int main(int argc, char *argv[]){
+    int itc, tr, i, j, threads = 256;
+    int n_imax, n_itc;
+    dim3 blocks;
+
+    if(argc < 3){
+        n_imax = N_IMAX;
+        n_itc = N_ITC;
+    }else{
+        n_imax = atoi(argv[1]);
+        n_itc = atoi(argv[2]);
+    }
+
+    calcular(n_imax, n_itc);         // define imax, jmax, dx_c, etc.
     alocar_globais(); 
-    int itc, tr, i, j;
 
-    double **um = (double**)malloc(sizeof(double*)*(imax+2));
-    double **um_n = (double**)malloc(sizeof(double*)*(imax+2));
-    double **res_u = (double**)malloc(sizeof(double*)*(imax+2));
-    double **um_tau = (double**)malloc(sizeof(double*)*(imax+2));
-    double **um_n_tau = (double**)malloc(sizeof(double*)*(imax+2));
-    for(int i = 0; i < (imax+2); i++){
-        um[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        um_n[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        res_u[i] = (double*)malloc(sizeof(double)*(jmax+1)); 
-        um_tau[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        um_n_tau[i] = (double*)malloc(sizeof(double)*(jmax+1));
-    }
-
-    double **vm = (double**)malloc(sizeof(double*)*(imax+1));
-    double **vm_n = (double**)malloc(sizeof(double*)*(imax+1));
-    double **res_v = (double**)malloc(sizeof(double*)*(imax+1));
-    double **vm_tau = (double**)malloc(sizeof(double*)*(imax+1));
-    double **vm_n_tau = (double**)malloc(sizeof(double*)*(imax+1));
-    for(int i = 0; i <= imax; i++){
-        vm[i] = (double*)malloc(sizeof(double)*(jmax+2));
-        vm_n[i] = (double*)malloc(sizeof(double)*(jmax+2));
-        res_v[i] = (double*)malloc(sizeof(double)*(jmax+2));  
-        vm_tau[i] = (double*)malloc(sizeof(double)*(jmax+2));
-        vm_n_tau[i] = (double*)malloc(sizeof(double)*(jmax+2)); 
-    }
+    double *dev_um, *dev_vm;
+    double *dev_um_n, *dev_vm_n;
+    double *dev_um_tau, *dev_vm_tau;
+    double *dev_um_n_tau, *dev_vm_n_tau;
+    cudaMallocManaged((void**)&dev_um, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMallocManaged((void**)&dev_vm, sizeof(double)*(imax+1)*(jmax+2));
+    cudaMalloc((void**)&dev_um_n, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_um_tau, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_um_n_tau, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_vm_n, sizeof(double)*(imax+1)*(jmax+2));
+    cudaMalloc((void**)&dev_vm_tau, sizeof(double)*(imax+1)*(jmax+2));
+    cudaMalloc((void**)&dev_vm_n_tau, sizeof(double)*(imax+1)*(jmax+2));
+    
 
     double **u = (double**)malloc(sizeof(double*)*(imax+1));
     double **v = (double**)malloc(sizeof(double*)*(imax+1));
@@ -64,7 +74,7 @@ int main(){
     }
 
 
-    double residual_p, residual_u, residual_v, error, duration;
+    double residual_p, residual_u, residual_v, error;
 
     //duration = omp_get_wtime()
     /*  character(len=128) :: pwd
@@ -137,27 +147,23 @@ int main(){
 
     //--- Set up initial flow field ---
     if(iterations.start_mode == 0){    
-        IC(um, vm, p, t, c, pn);
+        IC(dev_um, dev_vm, p, t, c, pn);
     }else if(iterations.start_mode == 1){
-        restart(um, vm, p, t, c);
+        restart(dev_um, dev_vm, p, t, c);
     }else if(iterations.start_mode == 2){
-        restart_dom(um, vm, p, t, z, h);
+        restart_dom(dev_um, dev_vm, p, t, z, h);
     }
 
     //--- Pseudo time step ---
     dtau = 5.e-2;
     dt = 0.5e-2;
 
-    for(i = 1; i <= imax+1; i++){
-        for(j = 1; j <= jmax; j++){
-            um_tau[i][j] = um[i][j];
-        }
-    }
-    for(i = 1; i <= imax; i++){
-        for(j = 1; j <= jmax+1; j++){
-            vm_tau[i][j] = vm[i][j];
-        }
-    }
+    blocks = grid_1d(((imax+1)*jmax), threads);
+    atualizar_matrizes_linearizadas<<<blocks, threads>>>(dev_um, dev_um_tau, imax+1, jmax, 1, jmax+1);
+
+    blocks = grid_1d((imax*(jmax+1)), threads);
+    atualizar_matrizes_linearizadas<<<blocks, threads>>>(dev_vm, dev_vm_tau, imax, jmax+1, 1, jmax+2);
+
 
     /*duration = omp_get_wtime() - duration;
     printf("init %lf/n", duration);
@@ -171,65 +177,53 @@ int main(){
         //--- Pseudo-time calculation starts ---
         while(itc < iterations.itc_max){
             //--- Solve Momentum Equation with QUICK Scheme ---
-            solve_U(um, vm, um_n, um_tau, vm_tau, um_n_tau, pn, &residual_u);
-            solve_V(um, vm, vm_n, um_tau, vm_tau, vm_n_tau, pn, t, &residual_v);
+            solve_U(dev_um, dev_vm, dev_um_n, dev_um_tau, dev_vm_tau, dev_um_n_tau, pn, &residual_u);
+            solve_V(dev_um, dev_vm, dev_vm_n, dev_um_tau, dev_vm_tau, dev_vm_n_tau, pn, t, &residual_v);
             
             //--- Solve Continuity Equation ---
-            solve_P(p, um_n_tau, vm_n_tau, pn, &residual_p);
+            solve_P(p, dev_um_n_tau, dev_vm_n_tau, pn, &residual_p);
             
             //--- Solve Energy Equation ---
-            solve_Z(um_n_tau, vm_n_tau, t, t_n_tau, t_tau);
-            solve_C(um_n_tau, vm_n_tau, c, c_n_tau, c_tau);
+            solve_Z(dev_um_n_tau, dev_vm_n_tau, t, t_n_tau, t_tau);
+            solve_C(dev_um_n_tau, dev_vm_n_tau, c, c_n_tau, c_tau);
 
             /*--- check convergence ---
             CALL convergence(itc, error, residual_p, residual_u, residual_v)
             itc = itc+1
             */
 
-            error = max(residual_p, residual_u);
-            error = max(residual_v, error);
+            error = fmax(residual_p, residual_u);
+            error = fmax(residual_v, error);
 
             //--- Convergence criteria ---
             if(itc != 1 && error < iterations.eps)
                 break;
 
             //--- Update variables ---
-            for(i = 1; i <= imax+1; i++){
-                for(j = 1; j <= jmax; j++){
-                    um_tau[i][j] = um_n_tau[i][j];
-                }
-            }
+            blocks = grid_1d(((imax+1)*jmax), threads);
+            atualizar_matrizes_linearizadas<<<blocks, threads>>>(dev_um_n_tau, dev_um_tau, imax+1, jmax, 1, jmax+1);
 
-            for(i = 1; i <= imax; i++){
-                for(j = 1; j <= jmax+1; j++){
-                    vm_tau[i][j] = vm_n_tau[i][j];
-                }
-            }
+            blocks = grid_1d((imax*(jmax+1)), threads);
+            atualizar_matrizes_linearizadas<<<blocks, threads>>>(dev_vm_n_tau, dev_vm_tau, imax, jmax+1, 1, jmax+2);
+   
 
             for(i = 1; i <= imax; i++){
                 for(j = 1; j <= jmax; j++){
-                    //printf("pn [%d][%d] = %lf\n", i, j, pn[i][j]);
                     p[i][j] = pn[i][j];
                     t_tau[i][j] = t_n_tau[i][j];
                     c_tau[i][j] = c_n_tau[i][j];
                 }
             }
 
-            itc += 1;
+            itc++;
         }
 
         //--- End of pseudo-time calculation ---
-        for(i = 1; i <= imax+1; i++){
-            for(j = 1; j <= jmax; j++){
-                um[i][j] = um_n_tau[i][j];
-            }
-        }
-        
-        for(i = 1; i <= imax; i++){
-            for(j = 1; j <= jmax+1; j++){
-                vm[i][j] = vm_n_tau[i][j];
-            }
-        }
+        blocks = grid_1d(((imax+1)*jmax), threads);
+        atualizar_matrizes_linearizadas<<<blocks, threads>>>(dev_um_n_tau, dev_um, imax+1, jmax, 1, jmax+1);
+
+        blocks = grid_1d((imax*(jmax+1)), threads);
+        atualizar_matrizes_linearizadas<<<blocks, threads>>>(dev_vm_n_tau, dev_vm, imax, jmax+1, 1, jmax+2);
 
         for(i = 1; i <= imax; i++){
             for(j = 1; j <= jmax; j++){
@@ -237,7 +231,6 @@ int main(){
                 c[i][j] = c_n_tau[i][j];
             }
         }
-
         /*--- Logs of time and intermediate results
         !IF (MOD(tr, n_tr) .EQ. 0) THEN
         !    WRITE(*,*) '-----------------------------------------------------------'
@@ -261,7 +254,6 @@ int main(){
         !    CALL output(um, vm, u, v, p, T, C, itc)
         !END IF
         */
-
         itc = 0;
         error = 100.0;
 
@@ -281,40 +273,25 @@ int main(){
     */
 
     //--- Compute the velocity of mean points ---
-    comp_mean(u, v, um, vm);
+    comp_mean(u, v, dev_um, dev_vm);
     transient(u, v, p, t, c, itc);
 
     //--- output data file ---
-    output(um, vm, u, v, p, t, c, itc);
+    output(dev_um, dev_vm, u, v, p, t, c, itc);
 
     /*duration = omp_get_wtime() - duration;
     printf("post %lf\n", duration);
     */
-    for(int i = 0; i < (imax+2); i++){
-        free(um[i]);
-        free(um_n[i]);
-        free(res_u[i]);
-        free(um_tau[i]);
-        free(um_n_tau[i]);
-    }
-    free(um);
-    free(um_n);
-    free(res_u);
-    free(um_tau);
-    free(um_n_tau);
 
-    for(int i = 0; i <= imax; i++){
-        free(vm[i]);
-        free(vm_n[i]);
-        free(res_v[i]);
-        free(vm_tau[i]);
-        free(vm_n_tau[i]);
-    }
-    free(vm);
-    free(vm_n);
-    free(res_v);
-    free(vm_tau);
-    free(vm_n_tau);
+    //desalocando
+    cudaFree(dev_um);
+    cudaFree(dev_um_n);
+    cudaFree(dev_um_tau);
+    cudaFree(dev_um_n_tau);
+    cudaFree(dev_vm);
+    cudaFree(dev_vm_n);
+    cudaFree(dev_vm_tau);
+    cudaFree(dev_vm_n_tau);
 
     for(int i = 0; i < imax+1; i++){
         free(u[i]);

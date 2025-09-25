@@ -3,6 +3,7 @@
 void bcUV(double **um, double **vm){
     int i, j;
 
+    //investigar
     //------ contorno inferior -----------
     for(i = 1; i <= imax; i++){
         vm[i][1] = v_i;
@@ -62,15 +63,6 @@ void bcP(double **pn){
 
 void bcZ(double **zt){
     int i, j;
-
-    double **gradz_x, **gradz_y;
-    gradz_x = (double**)malloc(sizeof(double*)*(imax+1));
-    gradz_y = (double**)malloc(sizeof(double*)*(imax+1));
-    for(i = 0; i < (imax+1); i++){
-        gradz_x[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        gradz_y[i] = (double*)malloc(sizeof(double)*(jmax+1));  
-    }
-
     //--------contorno inferior e superior --------
     for(i = 1; i <= imax; i++){
         zt[i][1] = tinf; //Zn(i,2)
@@ -82,8 +74,17 @@ void bcZ(double **zt){
         zt[1][j] = zt[2][j];
         zt[imax][j] = zt[imax-1][j];
     }
+    
+    /*double **gradz_x, **gradz_y;
+    gradz_x = (double**)malloc(sizeof(double*)*(imax+1));
+    gradz_y = (double**)malloc(sizeof(double*)*(imax+1));
+    for(i = 0; i < (imax+1); i++){
+        gradz_x[i] = (double*)malloc(sizeof(double)*(jmax+1));
+        gradz_y[i] = (double*)malloc(sizeof(double)*(jmax+1));  
+    }*/
 
-    i=1;
+
+    /*i=1;
     for(j = 2; j <= jmax-1; j++){
         gradz_x[i][j] = x[i] * (zt[i+1][j]-zt[i][j]) * dx[i];
         gradz_y[i][j] = y[j] * (zt[i][j+1]-zt[i][j]) * dy[j];
@@ -109,30 +110,18 @@ void bcZ(double **zt){
     }
     free(gradz_x);
     free(gradz_y);
+    */
 }
 
 void bcC(double **cn){
     int i, j;
-    double **gradc_x, **gradc_y;
+    /*double **gradc_x, **gradc_y;
     gradc_x = (double**)malloc(sizeof(double*)*(imax+1));
     gradc_y = (double**)malloc(sizeof(double*)*(imax+1));
     for(i = 0; i < (imax+1); i++){
         gradc_x[i] = (double*)malloc(sizeof(double)*(jmax+1));
         gradc_y[i] = (double*)malloc(sizeof(double)*(jmax+1));  
     }
-
-    //-----contorno inferior e superior --------
-    for(i = 1; i <= imax; i++){
-        cn[i][1] = 0.0;  //Zn(i,2)
-        cn[i][jmax] = cn[i][jmax-1] + 1.0*(cn[i][jmax-1]-cn[i][jmax-2]);
-    }
-    
-    //-------contorno esquerdo e direito -------    
-    for(j = 1; j <= jmax; j++){
-        cn[1][j] = cn[2][j];
-        cn[imax][j] = cn[imax-1][j];
-    }
-
     i=1;
     for(j = 2; j <= jmax-1; j++){
         gradc_x[i][j] = x[i] * (cn[i+1][j]-cn[i][j]) * dx[i];
@@ -159,4 +148,18 @@ void bcC(double **cn){
     }
     free(gradc_x);
     free(gradc_y);
+    */
+
+    //-----contorno inferior e superior --------
+    for(i = 1; i <= imax; i++){
+        cn[i][1] = 0.0;  //Zn(i,2)
+        cn[i][jmax] = cn[i][jmax-1] + 1.0*(cn[i][jmax-1]-cn[i][jmax-2]);
+    }
+    
+    //-------contorno esquerdo e direito -------    
+    for(j = 1; j <= jmax; j++){
+        cn[1][j] = cn[2][j];
+        cn[imax][j] = cn[imax-1][j];
+    }
+
 }
