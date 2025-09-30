@@ -1,6 +1,7 @@
 #include "comum.h"
+#define idx i*(jmax+1)+j 
 
-void transient(double **u, double **v, double **p, double **t, double **c, int tr){    
+void transient(double *dev_u, double *dev_v, double *dev_p, double *dev_t, double *dev_c, int tr){    
     char filename2[100];
     char filepath[256];
     FILE *arquivo;
@@ -12,7 +13,7 @@ void transient(double **u, double **v, double **p, double **t, double **c, int t
     arquivo = fopen(filepath, "w");
     for(i = 1; i <= imax; i++){
         for(j = 1; j <= jmax; j++){
-            fprintf(arquivo, "%lf ", u[i][j]);
+            fprintf(arquivo, "%lf ", dev_u[idx]);
         }
         fprintf(arquivo, "\n");
     }
@@ -22,7 +23,7 @@ void transient(double **u, double **v, double **p, double **t, double **c, int t
     arquivo = fopen(filepath, "w");
     for(i = 1; i <= imax; i++){
         for(j = 1; j <= jmax; j++){
-            fprintf(arquivo, "%lf ", v[i][j]);
+            fprintf(arquivo, "%lf ", dev_v[idx]);
         }
         fprintf(arquivo, "\n");
     }
@@ -32,7 +33,7 @@ void transient(double **u, double **v, double **p, double **t, double **c, int t
     arquivo = fopen(filepath, "w");
     for(i = 1; i <= imax; i++){
         for(j = 1; j <= jmax; j++){
-            fprintf(arquivo, "%lf ", p[i][j]); // espaço entre números     
+            fprintf(arquivo, "%lf ", dev_p[idx]); // espaço entre números     
         }
         fprintf(arquivo, "\n");
     }
@@ -42,7 +43,7 @@ void transient(double **u, double **v, double **p, double **t, double **c, int t
     arquivo = fopen(filepath, "w");
     for(i = 1; i <=imax; i++){
         for(j = 1; j <= jmax; j++){
-            fprintf(arquivo, "%lf ", t[i][j]);
+            fprintf(arquivo, "%lf ", dev_t[idx]);
         }
         fprintf(arquivo, "\n");
     }
@@ -52,7 +53,7 @@ void transient(double **u, double **v, double **p, double **t, double **c, int t
     arquivo = fopen(filepath, "w");
     for(i = 1; i <= imax; i++){
         for(j = 1; j <= jmax; j++){
-            fprintf(arquivo, "%lf ", c[i][j]);
+            fprintf(arquivo, "%lf ",dev_c[idx]);
         }
         fprintf(arquivo, "\n");
     }
@@ -60,7 +61,7 @@ void transient(double **u, double **v, double **p, double **t, double **c, int t
 
     snprintf(filepath, sizeof(filepath), "transient/data/time%s.dat", filename2);
     arquivo = fopen(filepath, "w");
-    fprintf(arquivo, "%lf\n", time);
+    fprintf(arquivo, "%lf\n", tempo);
     fclose(arquivo);
     
     arquivo = fopen("transient/data/grid.dat", "w");
@@ -94,7 +95,7 @@ void transient(double **u, double **v, double **p, double **t, double **c, int t
     fprintf(arquivo, "LOOKUP_TABLE default\n");
     for(i = 1; i <= imax; i++){
         for(j = 1; j <= jmax; j++){
-            double vel = sqrt(u[i][j]*u[i][j] + v[i][j]*v[i][j]);
+            double vel = sqrt(dev_u[idx]*dev_u[idx] + dev_v[idx]*dev_v[idx]);
             fprintf(arquivo, "%14.4f\n", vel);
         }
     }
@@ -104,7 +105,7 @@ void transient(double **u, double **v, double **p, double **t, double **c, int t
     fprintf(arquivo, "LOOKUP_TABLE default\n");
     for(i = 1; i <= imax; i++){
         for(j = 1; j <= jmax; j++){
-            fprintf(arquivo, "%14.4f ", t[i][j]);
+            fprintf(arquivo, "%14.4f ",dev_t[idx]);
         }
         fprintf(arquivo, "\n");
     }
@@ -114,7 +115,7 @@ void transient(double **u, double **v, double **p, double **t, double **c, int t
     fprintf(arquivo, "LOOKUP_TABLE default\n");
     for(i = 1; i <= imax; i++){
         for(j = 1; j <= jmax; j++){
-            fprintf(arquivo, "%14.4f ", p[i][j]);
+            fprintf(arquivo, "%14.4f ", dev_p[idx]);
         }
         fprintf(arquivo, "\n");
     }
@@ -124,7 +125,7 @@ void transient(double **u, double **v, double **p, double **t, double **c, int t
     fprintf(arquivo, "VECTORS Vectors float\n");
     for(i = 1; i <= imax; i++){
         for(j = 1; j <= jmax; j++){
-            fprintf(arquivo, "%14.4f %14.4f %14.4f ", u[i][j], v[i][j], 0.0);
+            fprintf(arquivo, "%14.4f %14.4f %14.4f ", dev_u[idx], dev_v[idx], 0.0);
         }
         fprintf(arquivo, "\n");
     }

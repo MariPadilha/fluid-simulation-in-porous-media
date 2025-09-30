@@ -1,6 +1,5 @@
 #include "comum.h"
-//#define OUTPUT 1 //Para debug
-
+#define idx i*(jmax+1)+j
 void mesh(){
     int i, j;
 
@@ -13,39 +12,39 @@ void mesh(){
     for(i = 1; i <= imax; i++){
         for(j = 1; j <= jmax; j++){
             if(dev_x[i] <= -4.0 && dev_y[j] >= 0.5){
-                flag[i][j] = c_i;
+                dev_flag[idx] = c_i;
             }else{
-                flag[i][j] = c_f;
+                dev_flag[idx] = c_f;
             }
         } 
     }
 //--------- sem objeto no dominio -------------
     for(i = 2; i <= imax-1; i++){
         for(j = 2; j <= jmax-1; j++){
-            if((flag[i][j] == c_i && flag[i-1][j] == c_f)
-            || (flag[i][j] == c_i && flag[i][j-1] == c_f)
-            || (flag[i][j] == c_i && flag[i+1][j] == c_f)
-            || (flag[i][j] == c_i && flag[i][j+1] == c_f)){
-                flag[i][j] = c_b;
+            if((dev_flag[idx] == c_i && dev_flag[(i-1)*(jmax+1)+j] == c_f)
+            || (dev_flag[idx] == c_i && dev_flag[i*(jmax+1)+(j-1)] == c_f)
+            || (dev_flag[idx] == c_i && dev_flag[(i+1)*(jmax+1)+j] == c_f)
+            || (dev_flag[idx] == c_i && dev_flag[i*(jmax+1)+(j+1)] == c_f)){
+                dev_flag[idx] = c_b;
             }
         }
     }
 
     i = 1;
     for(j = 2; j <= jmax-1; j++){
-        if(flag[i][j] == c_i && flag[i][j-1] == c_f
-        || flag[i][j] == c_i && flag[i][j+1] == c_f){
-            flag[i][j] = c_b;
+        if(dev_flag[idx] == c_i && dev_flag[i*(jmax+1)+(j-1)] == c_f
+        || dev_flag[idx] == c_i && dev_flag[i*(jmax+1)+(j+1)] == c_f){
+            dev_flag[idx] = c_b;
         }
     }
 
     for(i = 1; i <= imax-1; i++){
         for(j = 1; j <= jmax-1; j++){
-            if((flag[i][j] == c_f && flag[i-1][j] == c_b)
-            || (flag[i][j] == c_f && flag[i][j-1] == c_b)
-            || (flag[i][j] == c_f && flag[i+1][j] == c_b)
-            || (flag[i][j] == c_f && flag[i][j+1] == c_b)){
-                flag[i][j] = c_bs;
+            if((dev_flag[idx] == c_f && dev_flag[(i-1)*(jmax+1)+j] == c_b)
+            || (dev_flag[idx] == c_f && dev_flag[i*(jmax+1)+(j-1)] == c_b)
+            || (dev_flag[idx] == c_f && dev_flag[(i+1)*(jmax+1)+j] == c_b)
+            || (dev_flag[idx] == c_f && dev_flag[i*(jmax+1)+(j+1)] == c_b)){
+                dev_flag[idx] = c_bs;
             }
         }
     }
@@ -53,7 +52,7 @@ void mesh(){
 //on/off for porosity
     for(i = 1; i <= imax; i++){
         for(j = 1; j <= jmax; j++){
-            if(flag[i][j] != c_f){
+            if(dev_flag[idx] != c_f){
                 epsilon1[i*(jmax+1) + j] = porosidade;       
                 liga_poros[i*(jmax+1) + j] = 1.0;
             }else{ 
@@ -66,13 +65,12 @@ void mesh(){
     cudaMemcpy(dev_epsilon1, epsilon1, sizeof(double)*(imax+1)*(jmax+1), cudaMemcpyHostToDevice);
 
 //////////////////////////////////////////////////////////////////////////
-//debug
-    #ifdef OUTPUT
+    #ifdef DEBUG
         FILE *arquivo;
         arquivo = fopen("data/grid_droplet.dat", "w");
         for(i = 1; i <= imax; i++){
             for(j = 1; j <= jmax; j++){
-                if(flag[i][j] == c_i){ 
+                if(dev_flag[idx] == c_i){ 
                     fprintf(arquivo, "%lf %lf\n", dev_x[i], dev_y[j]);
                 }
             }
@@ -82,7 +80,7 @@ void mesh(){
         arquivo = fopen("data/grid_boundary.dat", "w");
         for(i = 1; i <= imax; i++){
             for(j = 1; j <= jmax; j++){
-                if(flag[i][j] == c_b){ 
+                if(dev_flag[idx] == c_b){ 
                     fprintf(arquivo, "%lf %lf\n", dev_x[i], dev_y[j]);
                 }
             }
@@ -92,7 +90,7 @@ void mesh(){
         arquivo = fopen("data/grid_boundary_side.dat", "w");
         for(i = 1; i <= imax; i++){
             for(j = 1; j <= jmax; j++){
-                if(flag[i][j] == c_bs){ 
+                if(dev_flag[idx] == c_bs){ 
                     fprintf(arquivo, "%lf %lf\n", dev_x[i], dev_y[j]);
                 }
             }

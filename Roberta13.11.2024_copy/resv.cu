@@ -7,7 +7,7 @@ __global__ void calc_resv(double *dev_fn, double *dev_fs, double *dev_fe, double
     double *dev_aww, double *dev_aee, double *dev_ass, double *dev_ann, double *dev_ap, double *dev_v_e, double *dev_v_ee, double *dev_v_n, double *dev_v_nn, 
 	double *dev_v_p, double *dev_v_s, double *dev_v_ss, double *dev_v_w, double *dev_v_ww, double *dev_u_p, double *dev_ym, double *dev_dvdydy, double *dev_dydudx,
 	double *dev_q_art, double *dev_artdivv, double *dev_liga_poros, double b_art, int imax, int jmax, double re, double darcy_number, double cf, double invfr2,
-	double *dev_um, double *dev_vm, double **p, double **t, double *dev_rv){
+	double *dev_um, double *dev_vm, double *dev_p, double *dev_t, double *dev_rv){
 
     int i = blockIdx.x * blockDim.x + threadIdx.x + 3;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 3;
@@ -76,23 +76,22 @@ __global__ void calc_resv(double *dev_fn, double *dev_fs, double *dev_fe, double
         dev_artdivv[idx] = -(b_art) * (dev_dydudx[idx]+dev_dvdydy[idx]);            
 
         //bulk artificial viscosity term from Ramshaw(1990)
-        dev_q_art[idx] = dev_epsilon1[idx] * (p[i][j]-p[i][j-1]) / (dev_y[j]-dev_y[j-1]) + dev_artdivv[idx];
+        dev_q_art[idx] = dev_epsilon1[idx] * (dev_p[idx]-dev_p[i*(jmax+1)+(j-1)]) / (dev_y[j]-dev_y[j-1]) + dev_artdivv[idx];
 
         dev_rv[i*(jmax+2)+j] = 1.0 / (dev_x[i]-dev_x[i-1]) / (dev_y[j]-dev_y[j-1]) 
                 * (-dev_ap[idx] * dev_v_p[idx] + dev_aww[idx] * dev_v_ww[idx] + dev_aw[idx] 
                 * dev_v_w[idx] + dev_aee[idx] * dev_v_ee[idx] + dev_ae[idx] * dev_v_e[idx] 
                 + dev_ass[idx] * dev_v_ss[idx] + dev_as[idx] * dev_v_s[idx] 
                 + dev_ann[idx] * dev_v_nn[idx] + dev_an[idx] * dev_v_n[idx]) 
-                - dev_q_art[idx] + invfr2 * (1.0 - 1.0 / ((t[i][j]+t[i][j-1]) * 0.5))
+                - dev_q_art[idx] + invfr2 * (1.0 - 1.0 / ((dev_t[idx]+dev_t[i*(jmax+1)+(j-1)]) * 0.5))
                 - dev_epsilon1[idx]*(dev_v_p[idx]/(re*darcy_number) 
                 + cf/(pow((dev_epsilon1[idx]*darcy_number), 0.5)) * dev_v_p[idx] 
                 * (pow((pow(dev_u_p[idx], 2.0) + pow(dev_v_p[idx], 2.0)), 0.5))) * dev_liga_poros[idx]; 
     }
 }
 
-
 //--- ResV ---
-void RESV(double *dev_um, double *dev_vm, double **p, double **t, double *dev_rv){
+void RESV(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, double *dev_rv){
     int threads = 256;
     dim3 blocks = grid_1d((imax-2-3)*(jmax-1-3), threads);
 
@@ -102,10 +101,10 @@ void RESV(double *dev_um, double *dev_vm, double **p, double **t, double *dev_rv
     dev_an, dev_aww, dev_aee, dev_ass, dev_ann, dev_ap, dev_v_e, dev_v_ee, dev_v_n, 
     dev_v_nn, dev_v_p, dev_v_s, dev_v_ss, dev_v_w, dev_v_ww, dev_u_p, dev_ym, dev_dvdydy,
     dev_dydudx, dev_q_art, dev_artdivv, dev_liga_poros, iterations.b_art, imax, jmax, re, darcy_number, 
-    cf, invfr2, dev_um, dev_vm, p, t, dev_rv);
+    cf, invfr2, dev_um, dev_vm, dev_p, dev_t, dev_rv);
 
-    upwind_Vi(dev_um,dev_vm,p,dev_rv,t,2);
-    upwind_Vi(dev_um,dev_vm,p,dev_rv,t,jmax);    
-    upwind_Vj(dev_um,dev_vm,p,dev_rv,t,2);
-    upwind_Vj(dev_um,dev_vm,p,dev_rv,t,imax-1);
+    upwind_Vi(dev_um,dev_vm, dev_p,dev_rv, dev_t, 2);
+    upwind_Vi(dev_um,dev_vm, dev_p,dev_rv, dev_t, jmax);    
+    upwind_Vj(dev_um,dev_vm, dev_p,dev_rv, dev_t, 2);
+    upwind_Vj(dev_um,dev_vm, dev_p,dev_rv, dev_t, imax-1);
 }

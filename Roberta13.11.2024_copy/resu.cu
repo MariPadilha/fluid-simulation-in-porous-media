@@ -7,7 +7,7 @@ __global__ void calc_resu(double *dev_fn, double *dev_fs, double *dev_fe, double
     double *dev_aww, double *dev_aee, double *dev_ass, double *dev_ann, double *dev_ap, double *dev_u_e, double *dev_u_ee, double *dev_u_n, double *dev_u_nn, 
 	double *dev_u_p, double *dev_u_s, double *dev_u_ss, double *dev_u_w, double *dev_u_ww, double *dev_v_p, double *dev_ym, double *dev_dudxdx, double *dev_dxdvdy,
 	double *dev_q_art, double *dev_artdivu, double *dev_liga_poros, double b_art, int imax, int jmax, double re, double darcy_number, double g, double cf,
-	double *dev_um, double *dev_vm, double **p, double *dev_ru){
+	double *dev_um, double *dev_vm, double *dev_p, double *dev_ru){
 
     int i = blockIdx.x * blockDim.x + threadIdx.x + 3;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 3;
@@ -71,7 +71,7 @@ __global__ void calc_resu(double *dev_fn, double *dev_fs, double *dev_fe, double
 		dev_artdivu[idx] = -b_art * (dev_dudxdx[idx] + dev_dxdvdy[idx]);   
 		
 		//bulk artificial viscosity term from Ramshaw(1990)
-		dev_q_art[idx] = dev_epsilon1[idx] * (p[i][j] - p[i-1][j]) / (dev_x[i] - dev_x[i-1]) + dev_artdivu[idx];
+		dev_q_art[idx] = dev_epsilon1[idx] * (dev_p[idx] - dev_p[(i-1)*(jmax+1)+j]) / (dev_x[i] - dev_x[i-1]) + dev_artdivu[idx];
 
 		dev_ru[idx] = 1.0 / (dev_x[i]-dev_x[i-1]) / (dev_y[j] - dev_y[j-1]) * (-dev_ap[idx] * dev_u_p[idx]
 				+  dev_aww[idx] * dev_u_ww[idx] + dev_aw[idx] * dev_u_w[idx] 
@@ -86,7 +86,7 @@ __global__ void calc_resu(double *dev_fn, double *dev_fs, double *dev_fe, double
 }
 
 //resu////////////
-void RESU(double *dev_um, double *dev_vm, double **p, double *dev_ru){
+void RESU(double *dev_um, double *dev_vm, double *dev_p, double *dev_ru){
     int threads = 256;
     dim3 blocks = grid_1d((imax-1-3)*(jmax-2-3), threads);
 
@@ -96,10 +96,10 @@ void RESU(double *dev_um, double *dev_vm, double **p, double *dev_ru){
     dev_aww, dev_aee, dev_ass, dev_ann, dev_ap, dev_u_e, dev_u_ee, dev_u_n, dev_u_nn, 
 	dev_u_p, dev_u_s, dev_u_ss, dev_u_w, dev_u_ww, dev_v_p, dev_ym, dev_dudxdx, dev_dxdvdy,
 	dev_q_art, dev_artdivu, dev_liga_poros, iterations.b_art, imax, jmax, re, darcy_number, g, cf,
-	dev_um, dev_vm, p, dev_ru);
+	dev_um, dev_vm, dev_p, dev_ru);
 
-    upwind_Ui(dev_um,dev_vm,p,dev_ru,2);
-    upwind_Ui(dev_um,dev_vm,p,dev_ru,jmax-1);
-    upwind_Uj(dev_um,dev_vm,p,dev_ru,2);
-    upwind_Uj(dev_um,dev_vm,p,dev_ru,imax);
+    upwind_Ui(dev_um, dev_vm, dev_p, dev_ru, 2);
+    upwind_Ui(dev_um, dev_vm, dev_p, dev_ru, jmax-1);
+    upwind_Uj(dev_um, dev_vm, dev_p, dev_ru, 2);
+    upwind_Uj(dev_um, dev_vm, dev_p, dev_ru, imax);
 }

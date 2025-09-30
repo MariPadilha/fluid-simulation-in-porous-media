@@ -9,7 +9,7 @@ __global__ void calc_dx(double *dev_dx, double *dev_x, int imax){
 
 __global__ void calc_dy(double *dev_dy, double *dev_y, int jmax){
     int j = blockIdx.x * blockDim.x + threadIdx.x + 2;
-    if(j > imax) return;
+    if(j > jmax) return;
         
     dev_dy[j] = dev_y[j]-dev_y[j-1];
 }

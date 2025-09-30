@@ -3,8 +3,8 @@
 
 dim3 grid_2d(int imax, int jmax, dim3 threads){
     return dim3(
-        ((imax+1) + threads.x - 1) / threads.x,
-        ((jmax+1) + threads.y - 1) / threads.y
+        ((imax) + threads.x - 1) / threads.x,
+        ((jmax) + threads.y - 1) / threads.y
     );
 }
 

@@ -5,7 +5,7 @@ __global__ void calc_upwind_Ui(double *dev_fn, double *dev_fs, double *dev_fe, d
     double *dev_areau_s, double *dev_areau_e, double *dev_areau_w, double *dev_epsilon1, double *dev_df, double *dev_dn, double *dev_ds, 
     double *dev_de, double *dev_dw, double *dev_ym, double *dev_x, double *dev_y, double *dev_aw, double *dev_as, double *dev_ae, double *dev_an, 
     double *dev_ap, double *dev_u_w, double *dev_u_e, double *dev_u_s, double *dev_u_n, double *dev_v_p, double *dev_u_p, double *dev_dudxdx, 
-    double *dev_dxdvdy, double *dev_q_art, double *dev_xm, double *dev_liga_poros, double re, double **p, double *dev_ru, int imax, 
+    double *dev_dxdvdy, double *dev_q_art, double *dev_xm, double *dev_liga_poros, double re, double **p, double *dev_ru, int imax, int jmax,
     int j, double b_art, double darcy_number, double cf, double g){
     
     int i = blockIdx.x * blockDim.x + threadIdx.x + 2;    
@@ -46,7 +46,7 @@ __global__ void calc_upwind_Ui(double *dev_fn, double *dev_fs, double *dev_fe, d
                      - dev_areau_w[j] * (dev_vm[(i-1)*(jmax+2)+(j+1)]-dev_vm[(i-1)*(jmax+2)+j]) / (dev_ym[j+1]-dev_ym[j]);
 
         //bulk artificial viscosity term from Ramshaw(1990)
-        dev_q_art[idx] = dev_epsilon1[idx] * (p[i][j]-p[i-1][j]) / (dev_x[i]-dev_x[i-1]) - iterations.b_art * (dev_dudxdx[idx]+dev_dxdvdy[idx]);
+        dev_q_art[idx] = dev_epsilon1[idx] * (p[i][j]-p[i-1][j]) / (dev_x[i]-dev_x[i-1]) - b_art * (dev_dudxdx[idx]+dev_dxdvdy[idx]);
 
         dev_ru[idx] = 1.0 / (dev_x[i]-dev_x[i-1]) / (dev_y[j]-dev_y[j-1]) * (-dev_ap[idx]*dev_u_p[idx]
                 +  dev_aw[idx] * dev_u_w[idx] + dev_ae[idx] * dev_u_e[idx]
@@ -66,5 +66,5 @@ void upwind_Ui(double *dev_um, double *dev_vm, double **p, double *dev_ru, int j
     calc_upwind_Ui<<<blocks, threads>>>(dev_fn, dev_fs, dev_fe, dev_fw, dev_vm, dev_um, dev_areau_n, dev_areau_s,
          dev_areau_e, dev_areau_w, dev_epsilon1, dev_df, dev_dn, dev_ds, dev_de, dev_dw, dev_ym, dev_x, dev_y, dev_aw,
          dev_as, dev_ae, dev_an, dev_ap, dev_u_w, dev_u_e, dev_u_s, dev_u_n, dev_v_p, dev_u_p, dev_dudxdx, dev_dxdvdy,
-         dev_q_art, dev_xm, dev_liga_poros, re, p, dev_ru, imax, j, iterations.b_art, darcy_number, cf, g);
+         dev_q_art, dev_xm, dev_liga_poros, re, p, dev_ru, imax, jmax, j, iterations.b_art, darcy_number, cf, g);
 }

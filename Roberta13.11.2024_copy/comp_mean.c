@@ -1,18 +1,18 @@
 #include "comum.h"
 
-void comp_mean(double **u, double **v, double **um, double **vm){
-    int i, j;
+__global__ void pontos_medios_velocidade(double *dev_u, double *dev_v, double *dev_um, double *dev_vm, int imax, int jmax){
+    int i = blockIdx.x * blockDim.x + threadIdx.x + 1;
+    int j = blockIdx.y * blockDim.y + threadIdx.y + 1;
 
-    //---CALCULA OS PONTOS MEDIOS DAS VELOCIDADES ---
-    for(i = 1; i <= imax; i++){
-        for(j = 1; j <= jmax; j++){
-            u[i][j] = (um[i+1][j]+um[i][j])*0.50;
-        }
+    if(i <= imax && j <= jmax){
+        dev_u[i*(jmax+1)+j] = (dev_um[(i+1)*(jmax+1)+j]+dev_um[i*(jmax+1)+j])*0.50;
+        dev_v[i*(jmax+1)+j] = (dev_vm[i*(jmax+2)+(j+1)]+dev_vm[i*(jmax+2)+j])*0.50;
     }
+}
 
-    for(i = 1; i <= imax; i++){
-        for(j = 1; j <= jmax; j++){
-            v[i][j] = (vm[i][j+1]+vm[i][j])*0.50;
-        }
-    }
+void comp_mean(double *dev_u, double *dev_v, double *dev_um, double *dev_vm){
+    dim3 threads(16,16);
+    dim3 blocks = grid_2d(imax-1, jmax-1, threads);
+    
+    pontos_medios_velocidade<<<blocks, threads>>>(dev_u, dev_v, dev_um, dev_vm, imax, jmax);
 }

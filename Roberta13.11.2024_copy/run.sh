@@ -8,21 +8,35 @@ sh cleaning.sh  # executa script para limpeza extra
 #/opt/nvidia/hpc_sdk/Linux_x86_64/24.9/compilers/bin/pgf90 -O3 -mp -pg \
 
 #/opt/nvidia/hpc_sdk/Linux_x86_64/25.5/compilers/bin/pgf90 
-gcc -O2 -I. \
-  comum.c \
-  max.c \
-  boundary.c \
-  properties_CH4.c \
-  initial.c \
-  nonsymetric_mesh.c \
-  comp_mean.c \
-  main.c  \
-  equations.c \
-  convergence.c \
+nvcc -arch=sm_86 -O2 -std=c++11 -I. \
+  xm_ym.cu \
+  x_y.cu \
+  upwind_Vj.cu \
+  upwind_Vi.cu \
+  upwind_Uj.cu \
+  upwind_Ui.cu \
   transient.c \
-  output.c \
+  resz.cu \
+  resv.cu \
+  resu.cu \
+  resc.cu \
   probe.c \
+  output.c  \
+  nonsymetric_mesh.cu \
+  max_reduce.cu \
+  main.cu \
+  initial.cu \
+  grids.cu \
   flametip.c \
+  dx_dy.cu \
+  convergence.c \
+  comum.cu \
+  comp_mean.c \
+  bcZ.cu \
+  bcUV.cu \
+  bcP.cu \
+  bcC.cu \
+  area_das_faces.cu \
   -o cylinder_solver.out -lm
 
 

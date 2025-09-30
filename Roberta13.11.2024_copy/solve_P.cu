@@ -1,14 +1,19 @@
 #include "comum.h"
+#define idx i*(jmax+1)+j
+
+///////////////////////////////////////////////////////////////
+//já verifiquei indices das matrizes linearizadas/////////////
+///////////////////////////////////////////////////////////////
 
 __global__ void calc_1(double *dev_dudx, double *dev_dvdy, double *dev_rp, double *dev_pi, double *dev_um_n, double *dev_vm_n, double *dev_areau_e, double *dev_areav_n, double *dev_areau_w, double *dev_areav_s, double *dev_p, int imax, int jmax, double dtau, double beta){
     int i = blockIdx.x * blockDim.x + threadIdx.x + 2;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 2;
 	
     if(i <= imax-1 && j <= jmax-1){
-        dev_dudx[i*(jmax+1)+j] = dev_um_n[(i+1)*(jmax+1)+j] * dev_areau_e[j] - dev_um_n[i*(jmax+1)+j] * dev_areau_w[j];
-        dev_dvdy[i*(jmax+1)+j] = dev_vm_n[i*(jmax+1)+(j+1)] * dev_areav_n[i] - dev_vm_n[i*(jmax+1)+j] * dev_areav_s[i];
-        dev_rp[i*(jmax+1)+j] = - (dev_dudx[i*(jmax+1)+j]+ dev_dvdy[i*(jmax+1)+j]); 
-        dev_pi[i*(jmax+1)+j] = dev_p[i*(jmax+1)+j] + dtau * dev_rp[i*(jmax+1)+j] * beta;
+        dev_dudx[idx] = dev_um_n[(i+1)*(jmax+1)+j] * dev_areau_e[j] - dev_um_n[idx] * dev_areau_w[j];
+        dev_dvdy[idx] = dev_vm_n[i*(jmax+2)+(j+1)] * dev_areav_n[i] - dev_vm_n[i*(jmax+2)+j] * dev_areav_s[i];
+        dev_rp[idx] = - (dev_dudx[idx]+ dev_dvdy[idx]); 
+        dev_pi[idx] = dev_p[idx] + dtau * dev_rp[idx] * beta;
     }
 }
 
@@ -16,7 +21,7 @@ __global__ void calc_2(double *dev_pi, double *dev_p, double *dev_rp, int jmax, 
     int i = blockIdx.x * blockDim.x + threadIdx.x + 2;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 3;
 	if(i <= imax-1 && j <= jmax-1){
-        dev_pi[i*(jmax+1)+j] = (double)(3.0/4.0) * dev_p[i*(jmax+1)+j] + (double)(1.0/4.0) * (dev_pi[i*(jmax+1)+j] + dtau * dev_rp[i*(jmax+1)+j] * beta);
+        dev_pi[idx] = (double)(3.0/4.0) * dev_p[idx] + (double)(1.0/4.0) * (dev_pi[idx] + dtau * dev_rp[idx] * beta);
     }
 }
 
@@ -24,12 +29,12 @@ __global__ void calc_3(double *dev_res_p, double *dev_pn, double *dev_rp, double
     int i = blockIdx.x * blockDim.x + threadIdx.x + 2;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 2;
 	if(i <= imax-1 && j <= jmax-1){
-        dev_res_p[i*(jmax+1)+j] = dtau * dev_rp[i*(jmax+1)+j] * beta;
-        dev_pn[i*(jmax+1)+j] = (double)(1.0 / 3.0) * dev_p[i*(jmax+1)+j] + (double)(2.0 / 3.0) * (dev_pi[i*(jmax+1)+j] + dev_res_p[i*(jmax+1)+j]);
+        dev_res_p[idx] = dtau * dev_rp[idx] * beta;
+        dev_pn[idx] = (double)(1.0 / 3.0) * dev_p[idx] + (double)(2.0 / 3.0) * (dev_pi[idx] + dev_res_p[idx]);
     }
 }
 
-void solve_P(double *dev_p, double *dev_um_n, double *dev_vm_n, double *dev_pn, double *residual_p){
+double solve_P(double *dev_p, double *dev_um_n, double *dev_vm_n, double *dev_pn){
     int i, j;
     dim3 threads(16,16), blocks;
 
@@ -48,5 +53,5 @@ void solve_P(double *dev_p, double *dev_um_n, double *dev_vm_n, double *dev_pn, 
 
     bcP(dev_pn);
 
-    (*residual_p) = maior_valor(dev_res_p, imax+1, jmax+1, 1, 1);
+    return max_reduce(dev_res_p, imax, jmax);
 }

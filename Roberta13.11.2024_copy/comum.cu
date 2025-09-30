@@ -5,6 +5,7 @@
 #include "functions.h"
 #include <cuda.h>
 #include <device_launch_parameters.h>
+//#define DEBUG 1
 
 struct Iterations iterations;
 struct Ref ref;
@@ -25,8 +26,7 @@ double eps, eps_mass;  //criterio de convergencia
 int restart_mode;      //tipo de start, se eh CI ou solucao anterior
 
 // Passo de tempo
-double dtau, dt;
-double time;
+double dtau, dt, tempo;
 
 // Parâmetros físicos e geométricos
 double porosidade = 0.5;                               //Lido em main, mesh, nonsymetric_mesh
@@ -74,7 +74,7 @@ double rad1 = 1.0;     //raio do cilindro
 
 // flags for obstacle interior, boundary, fluid cells, and close to the boundary
 int c_i = 2, c_b = 1, c_f = 0, c_bs = 3;     
-int **flag;
+int *dev_flag;
 
 // Constantes físicas e parâmetros de fluidos
 double g = 9.80665;               //gravitational constant [m/s^2]
@@ -222,15 +222,13 @@ void alocar_globais(){
     cudaMalloc((void**)&dev_res_z, sizeof(double)*(imax+1)*(jmax+1));
     cudaMalloc((void**)&dev_res_c, sizeof(double)*(imax+1)*(jmax+1));
     cudaMalloc((void**)&dev_zi, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMallocManaged((void**)&dev_flag, sizeof(int)*(imax+1)*(jmax+1));
+
 ////////////////////////////////////////////////////////
 
     epsilon1 = (double*)malloc(sizeof(double)*(imax+1)*(jmax+1));
     liga_poros = (double*)malloc(sizeof(double)*(imax+1)*(jmax+1));
 
-    flag = (int**)malloc(sizeof(int*)*(imax+1));
-    for(int i = 0; i < (imax+1); i++){
-        flag[i] = (int*)malloc(sizeof(int)*(jmax+1));
-    }
 
     dcdx2 = (double**)malloc(sizeof(double*)*(imax+1));
     dcdy2 = (double**)malloc(sizeof(double*)*(imax+1));
@@ -322,16 +320,15 @@ void desalocar_globais(){
     cudaFree(dev_res_z);
     cudaFree(dev_res_c);
     cudaFree(dev_zi);
+    cudaFree(dev_flag);
 
     for(int i = 0; i < (imax+1); i++){
-        free(flag[i]);
         free(dcdx2[i]);
         free(dcdy2[i]);
         free(ci[i]);
     }
     free(epsilon1);
     free(liga_poros);
-    free(flag);
     free(dcdx2);
     free(dcdy2);
     free(ci);

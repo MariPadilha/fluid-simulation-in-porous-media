@@ -7,7 +7,7 @@ __global__ void calc_upwind_Vi(double *dev_fn, double *dev_fs, double *dev_fe, d
     double *dev_areav_s, double *dev_areav_e, double *dev_areav_w, double *dev_epsilon1, double *dev_df, double *dev_dn, double *dev_ds, 
     double *dev_de, double *dev_dw, double *dev_ym, double *dev_x, double *dev_y, double *dev_aw, double *dev_as, double *dev_ae, double *dev_an, 
     double *dev_ap, double *dev_v_w, double *dev_v_e, double *dev_v_s, double *dev_v_n, double *dev_v_p, double *dev_u_p, double *dev_dvdydy, 
-    double *dev_dydudx, double *dev_q_art, double *dev_xm, double *dev_liga_poros, double re, double **p, double **t, double *dev_rv, int imax, 
+    double *dev_dydudx, double *dev_q_art, double *dev_xm, double *dev_liga_poros, double re, double *dev_p, double *dev_t, double *dev_rv, int imax, int jmax, 
     int j, double b_art, double invfr2, double darcy_number, double cf){
     
     int i = blockIdx.x * blockDim.x + threadIdx.x + 2;    
@@ -47,25 +47,25 @@ __global__ void calc_upwind_Vi(double *dev_fn, double *dev_fs, double *dev_fe, d
                      - dev_areav_s[i] * (dev_um[(i+1)*(jmax+1)+(j-1)]-dev_um[i*(jmax+1)+(j-1)]) / (dev_xm[i+1]-dev_xm[i]);
             
         //bulk artificial viscosity term from Ramshdev_aw(1dx)
-        dev_q_art[idx] = dev_epsilon1[idx] * (p[i][j]-p[i][j-1]) / (dev_y[j]-dev_y[j-1]) - b_art * (dev_dydudx[idx]+dev_dvdydy[idx]);
+        dev_q_art[idx] = dev_epsilon1[idx] * (dev_p[idx]-dev_p[i*(jmax+1)+(j-1)]) / (dev_y[j]-dev_y[j-1]) - b_art * (dev_dydudx[idx]+dev_dvdydy[idx]);
         dev_rv[i*(jmax+2)+j] = 1.0 / (dev_x[i]-dev_x[i-1]) / (dev_y[j]-dev_y[j-1]) * (-dev_ap[idx] * dev_v_p[idx]
                 +  dev_aw[idx] * dev_v_w[idx] + dev_ae[idx] * dev_v_e[idx] 
                 +  dev_as[idx] * dev_v_s[idx] + dev_an[idx] * dev_v_n[idx])  
-                -  dev_q_art[idx] + invfr2 * (1.0 - 1.0 / ((t[i][j]+t[i][j-1]) * 0.5))
+                -  dev_q_art[idx] + invfr2 * (1.0 - 1.0 / ((dev_t[idx]+dev_t[i*(jmax+1)+(j-1)]) * 0.5))
                 -  dev_epsilon1[idx] * (dev_v_p[idx]/(re*darcy_number) 
                 +  cf/(pow((dev_epsilon1[idx]*darcy_number), 0.5)) * dev_v_p[idx]
                 *  (pow((pow(dev_u_p[idx], 2.0) + pow(dev_v_p[idx], 2.0)), 0.5))) * dev_liga_poros[idx]; 
     }
 }
 
-void upwind_Vi(double *dev_um, double *dev_vm, double **p, double *dev_rv, double **t, int j){
+void upwind_Vi(double *dev_um, double *dev_vm, double *dev_p, double *dev_rv, double *dev_t, int j){
     int threads = 256;
     dim3 blocks = grid_1d((imax-1), threads);
 
     calc_upwind_Vi<<<blocks, threads>>>(dev_fn, dev_fs, dev_fe, dev_fw, dev_vm, dev_um, dev_areav_n, dev_areav_s,  dev_areav_e,
         dev_areav_w, dev_epsilon1, dev_df, dev_dn, dev_ds, dev_de, dev_dw, dev_ym, dev_x, dev_y, dev_aw, dev_as, dev_ae, dev_an, 
         dev_ap, dev_v_w, dev_v_e, dev_v_s, dev_v_n, dev_v_p, dev_u_p, dev_dvdydy, dev_dydudx, dev_q_art, dev_xm, dev_liga_poros,
-        re, p, t, dev_rv, imax, j, iterations.b_art, invfr2, darcy_number, cf);
+        re, dev_p, dev_t, dev_rv, imax, jmax, j, iterations.b_art, invfr2, darcy_number, cf);
 
     cudaDeviceSynchronize();
 }

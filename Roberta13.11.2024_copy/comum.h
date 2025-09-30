@@ -19,7 +19,7 @@ struct Ref{
 extern struct Ref ref;
 
 extern int restart_mode;
-extern double dtau, dt, time;
+extern double dtau, dt, tempo;
 extern double porosidade, darcy_number, cf, temp_cylinder, concentracao_inicial;
 extern double px_grid, py_grid, q_grid, lhori, y_up, y_down, hvert;
 extern int imax, jmax;    
@@ -31,7 +31,7 @@ extern double *dev_dx, *dev_dy;
 extern double *liga_poros, *epsilon1, *dev_epsilon1, *dev_liga_poros;
 extern double rad1;
 extern int c_i, c_b, c_f, c_bs;     
-extern int **flag;
+extern int *dev_flag;
 extern double g, ao, l_c, v_i, v_c, fr, invfr2, s, lf, lo;
 extern double too, tsup, tinf, q_dim, q;
 extern double cp_tot, rho_tot, k_tot, nu_tot, alpha_tot, re, pr, pe, sc;
