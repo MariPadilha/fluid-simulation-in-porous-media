@@ -12,7 +12,6 @@ gcc -O2 -I. \
   comum.c \
   max.c \
   boundary.c \
-  properties_CH4.c \
   initial.c \
   nonsymetric_mesh.c \
   comp_mean.c \
