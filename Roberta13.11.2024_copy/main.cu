@@ -4,8 +4,8 @@
 //Versteeg, H. K., and W. Malalasekera. 
 //"An introduction to computational Fluid Dynamics, The finite volume control, ed." (1995).
 #include "comum.h"
-#define N_IMAX 10
-#define N_ITC 2
+#define N_IMAX 51
+#define N_ITC 1000
 #define idx i*(jmax+1)+j
 
 __global__ void atualizar_matrizes_linearizadas(double *origem, double *destino, int tamanhoLinha, int tamanhoColuna, int inicio, int coluna){
