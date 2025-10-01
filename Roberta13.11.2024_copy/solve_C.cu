@@ -1,11 +1,7 @@
 #include "comum.h"
 #define idx i*(jmax+1)+j
 
-///////////////////////////////////////////////////////////////
-//já verifiquei indices das matrizes linearizadas/////////////
-///////////////////////////////////////////////////////////////
-
-__global__ void calc_1(double *dev_res_c, double *dev_ci, double *dev_c, double *dev_c_tau, double *dev_rc, int jmax, int imax, double dtau, double dt){
+static __global__ void calc_1(double *dev_res_c, double *dev_ci, double *dev_c, double *dev_c_tau, double *dev_rc, int jmax, int imax, double dtau, double dt){
     int i = blockIdx.x * blockDim.x + threadIdx.x + 2;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 2;
 	
@@ -15,7 +11,7 @@ __global__ void calc_1(double *dev_res_c, double *dev_ci, double *dev_c, double 
     }
 }
 
-__global__ void calc_2(double *dev_res_c, double *dev_ci, double *dev_c, double *dev_c_tau, double *dev_rc, int jmax, int imax, double dtau, double dt){
+static __global__ void calc_2(double *dev_res_c, double *dev_ci, double *dev_c, double *dev_c_tau, double *dev_rc, int jmax, int imax, double dtau, double dt){
     int i = blockIdx.x * blockDim.x + threadIdx.x + 2;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 2;
 	if(i <= imax-1 && j <= jmax-1){    
@@ -25,7 +21,7 @@ __global__ void calc_2(double *dev_res_c, double *dev_ci, double *dev_c, double 
     }
 }
 
-__global__ void calc_3(double *dev_res_c, double *dev_ci, double *dev_c, double *dev_c_tau, double *dev_c_n_tau, double *dev_rc, int jmax, int imax, double dtau, double dt){
+static __global__ void calc_3(double *dev_res_c, double *dev_ci, double *dev_c, double *dev_c_tau, double *dev_c_n_tau, double *dev_rc, int jmax, int imax, double dtau, double dt){
     int i = blockIdx.x * blockDim.x + threadIdx.x + 2;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 2;
 	if(i <= imax-1 && j <= jmax-1){
@@ -36,10 +32,9 @@ __global__ void calc_3(double *dev_res_c, double *dev_ci, double *dev_c, double 
 
 //--- solve_C - concentration ---
 void solve_C(double *dev_um_n, double *dev_vm_n, double *dev_c, double *dev_c_n_tau, double *dev_c_tau){
-    int i, j;
     double *dev_rc;
     dim3 threads(16,16), blocks;
-    blocks = grid_2d((imax-1-2), (jmax-1-2), threads);
+    blocks = grid_2d((imax-1-2), (jmax-1-2));
 
     cudaMalloc((void**)&dev_rc, sizeof(double)*(imax+1)*(jmax+1));
 

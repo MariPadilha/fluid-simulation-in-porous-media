@@ -1,6 +1,6 @@
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
-#include <cuda_runtime.h>  
+#include "comum.h"
 
 void upwind_Ui(double *dev_um, double *dev_vm, double *dev_p, double *dev_ru, int j);
 void upwind_Uj(double *dev_um, double *dev_vm, double *dev_p, double *dev_ru, int i);
@@ -34,6 +34,4 @@ void calcula_xm_ym();
 void calcula_dx_dy();
 int grid_1d(int tamanho, int threads);
 double max_reduce(double* dev_matriz_linearizada, int imax, int jmax);
-dim3 grid_2d(int imax, int jmax, dim3 threads);
-
 #endif

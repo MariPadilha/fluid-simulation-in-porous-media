@@ -33,7 +33,6 @@ __global__ void calc_3(double *dev_res_v, double *dev_vm, double *dev_vm_tau, do
 }
 
 double solve_V(double *dev_um, double *dev_vm, double *dev_vm_n, double *dev_um_tau, double *dev_vm_tau, double *dev_vm_n_tau, double *dev_p, double *dev_t){
-    int i, j;
     double *dev_vi, *dev_rv, *dev_res_v;
     dim3 threads(16,16), blocks;
 
@@ -43,7 +42,7 @@ double solve_V(double *dev_um, double *dev_vm, double *dev_vm_n, double *dev_um_
 
     RESV(dev_um_tau, dev_vm_tau, dev_p, dev_t, dev_rv);
 
-    blocks = grid_2d((imax-1-2), (jmax-1-3), threads);
+    blocks = grid_2d((imax-1-2), (jmax-1-3));
     calc_1<<<blocks, threads>>>(dev_res_v, dev_vm, dev_vm_tau, dev_rv, dev_vi, jmax, imax, dt, dtau);
 
     bcUV(dev_um_tau, dev_vi);

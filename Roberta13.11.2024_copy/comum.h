@@ -1,10 +1,13 @@
 #ifndef COMUM_H
 #define COMUM_H
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <math.h>
 #include "functions.h"
+#include <cuda_runtime.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <cuda.h>
+#include <device_launch_parameters.h>
 
 struct Iterations{
     int itc_max, nc, n_tr, n_out, n_vort;
@@ -56,6 +59,7 @@ extern double *dev_res_p, *dev_res_z, *dev_res_c;
 extern double **dcdx2, **dcdy2;
 extern double *dev_ci, *dev_zi; 
 
+dim3 grid_2d(int imax, int jmax);
 void calcular(int n_imax, int n_itc);
 void alocar_globais();
 void desalocar_globais();

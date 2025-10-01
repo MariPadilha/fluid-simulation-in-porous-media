@@ -58,7 +58,7 @@ __global__ void calc_upwind_Vj(double *dev_fn, double *dev_fs, double *dev_fe, d
     }
 }
 
-void calc_upwind_Vj(double *dev_um, double *dev_vm, double *dev_p, double *dev_rv, double *dev_t, int i){
+void upwind_Vj(double *dev_um, double *dev_vm, double *dev_p, double *dev_rv, double *dev_t, int i){
     int threads = 256;
     dim3 blocks = grid_1d(jmax, threads);
 

@@ -75,7 +75,7 @@ void init(){
 
     //--- iterations values ---
     arquivo = fopen("input/iterations.dat", "r+");
-    fscanf(arquivo, "%d %d %d %d %lf %lf %lf %lf %lf %lf %d",
+    (void)fscanf(arquivo, "%d %d %d %d %lf %lf %lf %lf %lf %lf %d",
            &iterations.nc, &iterations.n_tr, &iterations.n_out, &iterations.n_vort,
            &iterations.beta, &iterations.b_art, &iterations.dtau_f, &iterations.final_time,
            &iterations.eps, &iterations.eps_mass, &iterations.start_mode);
@@ -87,7 +87,7 @@ void init(){
 
     //--- reference values ---
     arquivo = fopen("input/reference.dat", "r+");
-    fscanf(arquivo, "%lf %lf %lf %lf %lf", &ref.tnu, &ref.yf_b, &ref.yo_oo, &ref.ts, &ref.tn_too);
+    (void)fscanf(arquivo, "%lf %lf %lf %lf %lf", &ref.tnu, &ref.yf_b, &ref.yo_oo, &ref.ts, &ref.tn_too);
     fclose(arquivo);
     printf("tnu: %lf, yf_b: %lf, yo_oo: %lf, ts: %lf, tn_too: %lf\n", ref.tnu, ref.yf_b, ref.yo_oo, ref.ts, ref.tn_too);
 
@@ -101,11 +101,11 @@ void IC(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, double *de
     cudaStreamCreate(&s2);
     cudaStreamCreate(&s3);
 
-    blocks = grid_2d(imax, jmax-1, threads);
+    blocks = grid_2d(imax, jmax-1);
     atualiza_ic_um<<<blocks, threads, 0, s1>>>(dev_um, imax, jmax);
-    blocks = grid_2d(imax-1, jmax, threads);
+    blocks = grid_2d(imax-1, jmax);
     atualiza_ic_vm<<<blocks, threads, 0, s2>>>(dev_vm, v_i, imax, jmax);
-    blocks = grid_2d(imax-1, jmax-1, threads);
+    blocks = grid_2d(imax-1, jmax-1);
     atualiza_ic_ptc<<<blocks, threads, 0, s3>>>(dev_p, dev_t, dev_c, dev_flag, tinf, temp_cylinder, concentracao_inicial, c_f, imax, jmax);
 
     cudaStreamSynchronize(s1);
@@ -123,7 +123,6 @@ void IC(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, double *de
 void restart(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, double *dev_c){
     int i, j;
     FILE *arquivo;
-    int resultado_arquivo;
 
     printf("RESTARTING PROGRAM\n");
     
@@ -132,21 +131,17 @@ void restart(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, doubl
         perror("Erro ao abrir data/restart/restartU.dat");
         exit(1);
     }
-    for(j = 1; j <= jmax; j++){
-        for(i = 1; i <= imax+1; i++){
-            resultado_arquivo = fscanf(arquivo, "%lf", &(dev_um[idx]));
+    for(i = 1; i <= imax+1; i++){
+        for(j = 1; j <= jmax; j++){
+            (void)fscanf(arquivo, "%lf", &(dev_um[idx]));
         }
     }
     fclose(arquivo);
 
     arquivo = fopen("data/restart/restartV.dat", "r");
-    if (!arquivo){
-        perror("Erro ao abrir data/restart/restartV.dat");
-        exit(1);
-    }
-    for(j = 1; j <= jmax+1; j++){
-        for(i = 1; i <= imax; i++){
-            resultado_arquivo = fscanf(arquivo, "%lf", &(dev_vm[i*(jmax+2)+j]));
+    for(i = 1; i <= imax; i++){
+        for(j = 1; j <= jmax+1; j++){
+            (void)fscanf(arquivo, "%lf", &(dev_vm[i*(jmax+2)+j]));
         }
     }
     fclose(arquivo);
@@ -156,9 +151,9 @@ void restart(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, doubl
         perror("Erro ao abrir data/restart/restartPTC.dat");
         exit(1);
     }
-    for(j = 1; j <= jmax; j++){
-        for(i = 1; i <= imax; i++){
-            resultado_arquivo = fscanf(arquivo, "%lf %lf %lf", &(dev_p[idx]), &(dev_t[idx]), &(dev_c[idx]));
+    for(i = 1; i <= imax; i++){
+        for(j = 1; j <= jmax; j++){
+            (void)fscanf(arquivo, "%lf %lf %lf", &(dev_p[idx]), &(dev_t[idx]), &(dev_c[idx]));
         }
     }
     fclose(arquivo);
@@ -170,7 +165,6 @@ void restart_dom(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, d
     int rjmax = 321; //em y
     double *dev_umr, *dev_vmr, *dev_pres, *dev_zr, *dev_tr, *dev_hr, *dev_h_res;
     FILE *arquivo;
-    int resultado_arquivo;
     dim3 blocks, threads(16,16);
 
     cudaMalloc((void**)&dev_umr, sizeof(double)*(rimax+2)*(rjmax+1));
@@ -186,7 +180,7 @@ void restart_dom(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, d
     arquivo = fopen("data/restart/restartU.dat", "r");
     for(i = 1; i <= rimax+1; i++){
         for(j = 1; j <= rjmax; j++){
-            resultado_arquivo = fscanf(arquivo, "%lf", &(dev_umr[i*(rjmax+1)+j]));
+            (void)fscanf(arquivo, "%lf", &(dev_umr[i*(rjmax+1)+j]));
         }
     }
     fclose(arquivo);
@@ -194,7 +188,7 @@ void restart_dom(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, d
     arquivo = fopen("data/restart/restartV.dat", "r");
     for(i = 1; i <= rimax; i++){
         for(j = 1; j <= rjmax+1; j++){
-            resultado_arquivo = fscanf(arquivo, "%lf", &(dev_vmr[i*(rjmax+2)+j]));
+            (void)fscanf(arquivo, "%lf", &(dev_vmr[i*(rjmax+2)+j]));
         }
     }
     fclose(arquivo);
@@ -202,12 +196,12 @@ void restart_dom(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, d
     arquivo = fopen("data/restart/restartPTZH.dat", "r");
     for(i = 1; i <= rimax; i++){
         for(j = 1; j <= rjmax; j++){
-            resultado_arquivo = fscanf(arquivo, "%lf %lf %lf %lf", &(dev_pres[i*(rjmax+1)+j]), &(dev_tr[i*(rjmax+1)+j]), &(dev_zr[i*(rjmax+1)+j]), &(dev_h_res[i*(rjmax+1)+j]));
+            (void)fscanf(arquivo, "%lf %lf %lf %lf", &(dev_pres[i*(rjmax+1)+j]), &(dev_tr[i*(rjmax+1)+j]), &(dev_zr[i*(rjmax+1)+j]), &(dev_h_res[i*(rjmax+1)+j]));
         }
     }
     fclose(arquivo);
 
-    blocks = grid_2d(rimax-1, rjmax-1, threads);
+    blocks = grid_2d(rimax-1, rjmax-1);
     atualiza_hr<<<blocks, threads>>>(dev_hr, dev_h_res, rimax, rjmax, s, lf, tinf, q);
 
     cudaStream_t s1, s2, s3;
@@ -215,11 +209,11 @@ void restart_dom(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, d
     cudaStreamCreate(&s2);
     cudaStreamCreate(&s3);
 
-    blocks = grid_2d(imax, jmax-1, threads);
+    blocks = grid_2d(imax, jmax-1);
     restart_dom_um<<<blocks, threads, 0, s1>>>(dev_um, dev_umr, rjmax, imax, jmax);
-    blocks = grid_2d(imax-1, jmax, threads);
+    blocks = grid_2d(imax-1, jmax);
     restart_dom_vm<<<blocks, threads, 0, s2>>>(dev_vm, dev_vmr, imax, jmax, rjmax);
-    blocks = grid_2d(imax-1, jmax-1, threads);
+    blocks = grid_2d(imax-1, jmax-1);
     restart_dom_ptzh<<<blocks, threads, 0, s3>>>(dev_p, dev_t, dev_z, dev_h, dev_pres, dev_tr, dev_zr, dev_hr, imax, jmax, rjmax);
 
     cudaStreamSynchronize(s1);

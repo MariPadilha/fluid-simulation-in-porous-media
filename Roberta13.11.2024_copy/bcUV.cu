@@ -1,6 +1,6 @@
 #include "comum.h"
 
-__global__ void contorno_inferior(double *dev_um, double *dev_vm, int imax, int jmax, double v_i){
+static __global__ void contorno_inferior(double *dev_um, double *dev_vm, int imax, int jmax, double v_i){
     int i = blockIdx.x * blockDim.x + threadIdx.x + 1;
     if(i > imax) return;
     
@@ -12,7 +12,7 @@ __global__ void contorno_inferior(double *dev_um, double *dev_vm, int imax, int 
     }
 }
 
-__global__ void contorno_superior(double *dev_um, double *dev_vm, int imax, int jmax){
+static __global__ void contorno_superior(double *dev_um, double *dev_vm, int imax, int jmax){
     int i = blockIdx.x * blockDim.x + threadIdx.x + 2;
     if(i > imax) return;
     
@@ -21,7 +21,7 @@ __global__ void contorno_superior(double *dev_um, double *dev_vm, int imax, int 
     dev_um[i*(jmax+1)+jmax] = dev_um[i*(jmax+1)+(jmax-1)];
 }
 
-__global__ void contorno_esquerdo(double *dev_um, double *dev_vm, int imax, int jmax){
+static __global__ void contorno_esquerdo(double *dev_um, double *dev_vm, int imax, int jmax){
     int j = blockIdx.x * blockDim.x + threadIdx.x + 1;
     if(j > jmax+1) return;
     
@@ -33,7 +33,7 @@ __global__ void contorno_esquerdo(double *dev_um, double *dev_vm, int imax, int 
     dev_vm[1*(jmax+2)+j] = dev_vm[2*(jmax+2)+j];
 }
 
-__global__ void contorno_direito(double *dev_um, double *dev_vm, int imax, int jmax){
+static __global__ void contorno_direito(double *dev_um, double *dev_vm, int imax, int jmax){
     int j = blockIdx.x * blockDim.x + threadIdx.x + 1;
     if(j > jmax) return;
     

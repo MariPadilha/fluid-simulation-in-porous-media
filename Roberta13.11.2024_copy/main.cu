@@ -134,7 +134,7 @@ int main(int argc, char *argv[]){
     //--- Create mesh ---
     mesh();
 
-    blocks = grid_2d(imax-1, jmax-2, threads);
+    blocks = grid_2d(imax-1, jmax-2);
     atualiza_tc<<<blocks, threads>>>(dev_t, dev_c, dev_flag, temp_cylinder, concentracao_inicial, c_f, imax, jmax);
 
     //--- Set up initial flow field ---

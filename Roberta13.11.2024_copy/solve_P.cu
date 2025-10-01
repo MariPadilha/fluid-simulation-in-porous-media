@@ -25,7 +25,7 @@ __global__ void calc_2(double *dev_pi, double *dev_p, double *dev_rp, int jmax, 
     }
 }
 
-__global__ void calc_3(double *dev_res_p, double *dev_pn, double *dev_rp, double *dev_p, int jmax, int imax, double dtau, double beta){
+__global__ void calc_3(double *dev_res_p, double *dev_pn, double *dev_rp, double *dev_p, double *dev_pi, int jmax, int imax, double dtau, double beta){
     int i = blockIdx.x * blockDim.x + threadIdx.x + 2;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 2;
 	if(i <= imax-1 && j <= jmax-1){
@@ -35,21 +35,20 @@ __global__ void calc_3(double *dev_res_p, double *dev_pn, double *dev_rp, double
 }
 
 double solve_P(double *dev_p, double *dev_um_n, double *dev_vm_n, double *dev_pn){
-    int i, j;
     dim3 threads(16,16), blocks;
 
-    blocks = grid_2d((imax-1-2), (jmax-1-2), threads);
+    blocks = grid_2d((imax-1-2), (jmax-1-2));
     calc_1<<<blocks, threads>>>(dev_dudx, dev_dvdy, dev_rp, dev_pi, dev_um_n, dev_vm_n, dev_areau_e, dev_areav_n, dev_areau_w, dev_areav_s, dev_p, imax, jmax, dtau, iterations.beta);
 
     bcP(dev_pi);
 
-    blocks = grid_2d((imax-1-2), (jmax-1-3), threads);
+    blocks = grid_2d((imax-1-2), (jmax-1-3));
     calc_2<<<blocks, threads>>>(dev_pi, dev_p, dev_rp, jmax, imax, dtau, iterations.beta);
 
     bcP(dev_pi);
 
-    blocks = grid_2d((imax-1-2), (jmax-1-2), threads);
-    calc_3<<<blocks, threads>>>(dev_res_p, dev_pn, dev_rp, dev_p, jmax, imax, dtau, iterations.beta);
+    blocks = grid_2d((imax-1-2), (jmax-1-2));
+    calc_3<<<blocks, threads>>>(dev_res_p, dev_pn, dev_rp, dev_p, dev_pi, jmax, imax, dtau, iterations.beta);
 
     bcP(dev_pn);
 

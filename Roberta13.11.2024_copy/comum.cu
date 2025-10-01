@@ -1,10 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
 #include "comum.h"
 #include "functions.h"
-#include <cuda.h>
-#include <device_launch_parameters.h>
+
 //#define DEBUG 1
 
 struct Iterations iterations;
@@ -124,7 +120,7 @@ double *dev_dcudx, *dev_dcvdy, *dev_res_p;
 double *dev_dudx, *dev_dvdy, *dev_rp, *dev_pi;
 double *dev_res_z, *dev_res_c; 
 
-double **dcdx2, **dcdy2, **zi, **ci;
+double **dcdx2, **dcdy2, *dev_zi, *dev_ci;
 
 void calcular(int n_imax, int n_itc){
     l_c = ao;
@@ -136,6 +132,13 @@ void calcular(int n_imax, int n_itc){
     jmax = (int)((hvert / dx_c) + 1);
     invfr2 = 1.0 / (fr * fr);
     iterations.itc_max = n_itc;
+}
+
+dim3 grid_2d(int imax, int jmax){
+    return dim3(
+        ((imax) + 16 - 1) / 16,
+        ((jmax) + 16 - 1) / 16
+    );
 }
 
 void alocar_globais(){
@@ -223,6 +226,7 @@ void alocar_globais(){
     cudaMalloc((void**)&dev_res_c, sizeof(double)*(imax+1)*(jmax+1));
     cudaMalloc((void**)&dev_zi, sizeof(double)*(imax+1)*(jmax+1));
     cudaMallocManaged((void**)&dev_flag, sizeof(int)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_ci, sizeof(double*)*(imax+1)*(jmax+1));
 
 ////////////////////////////////////////////////////////
 
@@ -232,11 +236,9 @@ void alocar_globais(){
 
     dcdx2 = (double**)malloc(sizeof(double*)*(imax+1));
     dcdy2 = (double**)malloc(sizeof(double*)*(imax+1));
-    ci = (double**)malloc(sizeof(double*)*(imax+1));
     for(int i = 0; i < (imax+1); i++){
         dcdx2[i] = (double*)malloc(sizeof(double)*(jmax+1));
         dcdy2[i] = (double*)malloc(sizeof(double)*(jmax+1));
-        ci[i] = (double*)malloc(sizeof(double)*(jmax+1));
     }
 }
 
@@ -321,15 +323,14 @@ void desalocar_globais(){
     cudaFree(dev_res_c);
     cudaFree(dev_zi);
     cudaFree(dev_flag);
+    cudaFree(dev_ci);
 
     for(int i = 0; i < (imax+1); i++){
         free(dcdx2[i]);
         free(dcdy2[i]);
-        free(ci[i]);
     }
     free(epsilon1);
     free(liga_poros);
     free(dcdx2);
     free(dcdy2);
-    free(ci);
 }

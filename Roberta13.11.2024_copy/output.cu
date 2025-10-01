@@ -1,5 +1,6 @@
 #include "comum.h"
 #define idx i*(jmax+1)+j
+
 void output(double *dev_um, double *dev_vm, double *dev_u, double *dev_v, double *dev_p, double *dev_t, double *dev_c, int k){
     FILE *arquivo;
     
