@@ -41,6 +41,7 @@ int main(int argc, char *argv[]){
         n_itc = atoi(argv[2]);
     }
 
+
     calcular(n_imax, n_itc);         // define imax, jmax, dx_c, etc.
     alocar_globais(); 
 

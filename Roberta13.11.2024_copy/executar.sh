@@ -5,7 +5,7 @@
 #  for i in 1 2 4 6 8 10 12 14 16 18 20 22 24
 #  do
 #	export OMP_NUM_THREADS=$i
-	time ./cylinder_solver.out 2> erro04.11_3.txt 1> saida04.11_3.txt
+	time ./cylinder_solver.out 10 2 2> erro04.11_3.txt 1> saida04.11_3.txt
 #  done
 #done
 
