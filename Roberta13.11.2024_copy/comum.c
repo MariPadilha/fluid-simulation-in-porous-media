@@ -130,7 +130,7 @@ void calcular(){
     v_c = v_i;
     cf = 1.75 / (150.0 * pow(pow(porosidade,3.0), 0.5));                                  //1.75 / pow((150.0 * pow(porosidade,3.0)), 0.5);
     hvert = y_up + y_down;
-    imax = 51;
+    imax = 10;
     dx_c = lhori / (imax-1);
     jmax = (int)((hvert / dx_c) + 1);
     invfr2 = 1.0 / (fr * fr);
