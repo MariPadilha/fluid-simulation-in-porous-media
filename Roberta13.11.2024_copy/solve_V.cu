@@ -1,10 +1,6 @@
 #include "comum.h"
 #define idx i*(jmax+2)+j
 
-//////////////////////////////////////////////////////
-//já verifiquei indices das matrizes linearizadas//////
-//////////////////////////////////////////////////////
-
 __global__ void calc_1(double *dev_res_v, double *dev_vm, double *dev_vm_tau, double *dev_rv, double *dev_vi, int jmax, int imax, double dt, double dtau){
     int i = blockIdx.x * blockDim.x + threadIdx.x + 2;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 3;
@@ -34,7 +30,8 @@ __global__ void calc_3(double *dev_res_v, double *dev_vm, double *dev_vm_tau, do
 
 double solve_V(double *dev_um, double *dev_vm, double *dev_vm_n, double *dev_um_tau, double *dev_vm_tau, double *dev_vm_n_tau, double *dev_p, double *dev_t){
     double *dev_vi, *dev_rv, *dev_res_v;
-    dim3 threads(16,16), blocks;
+    dim3 blockDim(16,16);
+    dim3 gridDim((imax-3 + blockDim.x - 1)/blockDim.x, (jmax-4 + blockDim.y - 1)/blockDim.y);
 
     cudaMalloc((void**)&dev_rv, sizeof(double)*(imax+1)*(jmax+2));
     cudaMalloc((void**)&dev_vi, sizeof(double)*(imax+1)*(jmax+2));
@@ -42,18 +39,17 @@ double solve_V(double *dev_um, double *dev_vm, double *dev_vm_n, double *dev_um_
 
     RESV(dev_um_tau, dev_vm_tau, dev_p, dev_t, dev_rv);
 
-    blocks = grid_2d((imax-1-2), (jmax-1-3));
-    calc_1<<<blocks, threads>>>(dev_res_v, dev_vm, dev_vm_tau, dev_rv, dev_vi, jmax, imax, dt, dtau);
+    calc_1<<<gridDim, blockDim>>>(dev_res_v, dev_vm, dev_vm_tau, dev_rv, dev_vi, jmax, imax, dt, dtau);
 
     bcUV(dev_um_tau, dev_vi);
     RESV(dev_um_tau, dev_vi, dev_p, dev_t, dev_rv);
 
-    calc_2<<<blocks, threads>>>(dev_res_v, dev_vm, dev_vm_tau, dev_rv, dev_vi, jmax, imax, dt, dtau);
+    calc_2<<<gridDim, blockDim>>>(dev_res_v, dev_vm, dev_vm_tau, dev_rv, dev_vi, jmax, imax, dt, dtau);
 
     bcUV(dev_um_tau, dev_vi);
     RESV(dev_um_tau, dev_vi, dev_p, dev_t, dev_rv);
 
-    calc_3<<<blocks, threads>>>(dev_res_v, dev_vm, dev_vm_tau, dev_vm_n_tau, dev_rv, dev_vi, jmax, imax, dt, dtau);
+    calc_3<<<gridDim, blockDim>>>(dev_res_v, dev_vm, dev_vm_tau, dev_vm_n_tau, dev_rv, dev_vi, jmax, imax, dt, dtau);
 
     bcUV(dev_um_tau, dev_vm_n_tau);
 

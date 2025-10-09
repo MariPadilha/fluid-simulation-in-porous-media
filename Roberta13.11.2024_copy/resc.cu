@@ -29,10 +29,10 @@ __global__ void calc_resc(double *dev_dcudx, double *dev_dcvdy, double *dev_area
 }
 
 void RESC(double *dev_um_n, double *dev_vm_n, double *dev_c, double *dev_rc){
-    int threads = 256;
-    dim3 blocks = grid_1d((imax-1-2)*(jmax-1-2), threads);
+    dim3 blockDim(16,16);
+    dim3 gridDim((imax-3 + blockDim.x - 1)/blockDim.x, (jmax-3 + blockDim.y - 1)/blockDim.y);
     
-    calc_resc<<<blocks, threads>>>(dev_dcudx, dev_dcvdy, dev_areau_e, dev_areau_w, dev_areav_n, dev_areav_s, 
+    calc_resc<<<gridDim, blockDim>>>(dev_dcudx, dev_dcvdy, dev_areau_e, dev_areau_w, dev_areav_n, dev_areav_s, 
     dev_de, dev_dw, dev_dn, dev_ds, dev_dp, dev_xm, dev_ym, dev_x, dev_y, 
     dev_liga_poros, dev_epsilon1, re, sc, imax, jmax, dev_um_n, dev_vm_n, dev_c, dev_rc);
 }

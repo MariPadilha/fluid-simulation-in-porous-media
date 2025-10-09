@@ -12,9 +12,9 @@ __global__ void atualizar_matrizes_linearizadas(double *origem, double *destino,
     int i = blockIdx.x * blockDim.x + threadIdx.x + inicio;
     int j = blockIdx.y * blockDim.y + threadIdx.y + inicio;
     
-    if(i > tamanhoLinha || j > tamanhoColuna)return;
-        
-    destino[i*(coluna)+j] = origem[i*(coluna)+j];
+    if(i <= tamanhoLinha && j <= tamanhoColuna){
+        destino[i*(coluna)+j] = origem[i*(coluna)+j];
+    }
 }
 
 __global__ void atualiza_tc(double *dev_t, double *dev_c, int *dev_flag, double temp_cylinder, double concentracao_inicial, int c_f, int imax, int jmax){
@@ -160,11 +160,6 @@ int main(int argc, char *argv[]){
     duration = omp_get_wtime();
     */
 
-   for(int i = 1; i <= (imax+1); i++){
-       for(int j = 1; j <= jmax; j++){
-           printf("[%i][%i] = %lf\n", i, j, dev_um_tau[i*(jmax+1)+j]);
-       }
-   }
     //--- Physical time step ---
     while(tempo < iterations.final_time){
         tempo = tempo + dt;

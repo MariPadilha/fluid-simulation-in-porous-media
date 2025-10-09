@@ -33,10 +33,10 @@ __global__ void calc_resz(double *dev_dzudx, double *dev_dzvdy, double *dev_de, 
 }
 
 void RESZ(double *dev_um_n, double *dev_vm_n, double *dev_z, double *dev_rz){
-    int threads = 256;
-    dim3 blocks = grid_1d((imax-1-2)*(jmax-1-2), threads);
+    dim3 blockDim(16, 16);
+    dim3 gridDim((imax-3 + blockDim.x - 1)/blockDim.x, (jmax-3 + blockDim.y - 1)/blockDim.y);
     
-    calc_resz<<<blocks, threads>>>(dev_dzudx, dev_dzvdy, dev_de, dev_dw, dev_dn, dev_ds, dev_dp, 
+    calc_resz<<<gridDim, blockDim>>>(dev_dzudx, dev_dzvdy, dev_de, dev_dw, dev_dn, dev_ds, dev_dp, 
     dev_xm, dev_x, dev_y, dev_ym, dev_areau_e, dev_areau_w, dev_areav_n,
     dev_areav_s, dev_epsilon1, dev_liga_poros, pe, imax, jmax, dev_um_n, dev_vm_n, dev_z, dev_rz);
 }

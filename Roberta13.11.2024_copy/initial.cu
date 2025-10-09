@@ -21,7 +21,7 @@ __global__ void atualiza_ic_ptc(double *dev_p, double *dev_t, double *dev_c, int
     int i = blockIdx.x * blockDim.x + threadIdx.x + 1;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 1;
 
-    if(i > imax && j > jmax)return;
+    if(i > imax || j > jmax)return;
 
     dev_p[idx] = 1.0;
     dev_t[idx] = tinf;
@@ -53,7 +53,7 @@ __global__ void restart_dom_ptzh(double *dev_p, double *dev_t, double *dev_z, do
     int i = blockIdx.x * blockDim.x + threadIdx.x + 1;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 1;
 
-    if(i > imax && j > jmax)return;
+    if(i > imax || j > jmax)return;
 
     dev_p[idx] = (j <= rjmax) ? dev_pres[i*(rjmax+1)+j] : dev_p[i*(jmax+1)+(j-1)];
     dev_t[idx] = (j <= rjmax) ? dev_tr[i*(rjmax+1)+j] : dev_t[i*(jmax+1)+(j-1)];
@@ -65,7 +65,7 @@ __global__ void atualiza_hr(double *dev_hr, double *dev_h_res, int rimax, int rj
     int i = blockIdx.x * blockDim.x + threadIdx.x + 1;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 1;
 
-    if(i > rimax && j > rjmax)return;
+    if(i > rimax || j > rjmax)return;
 
     dev_hr[i*(rjmax+1)+j] = dev_h_res[i*(rjmax+1)+j] + (((s + 1.0) * lf * tinf / q + 1.0) - dev_h_res[i*(rjmax+1)+j]);
 }

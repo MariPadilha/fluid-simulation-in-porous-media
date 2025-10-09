@@ -87,10 +87,10 @@ __global__ void calc_resu(double *dev_fn, double *dev_fs, double *dev_fe, double
 
 //resu////////////
 void RESU(double *dev_um, double *dev_vm, double *dev_p, double *dev_ru){
-    int threads = 256;
-    dim3 blocks = grid_1d((imax-1-3)*(jmax-2-3), threads);
+    dim3 blockDim(16,16);
+    dim3 gridDim((imax-4 + blockDim.x - 1)/blockDim.x, (jmax-5 + blockDim.y - 1)/blockDim.y);
 
-    calc_resu<<<blocks, threads>>>(dev_fn, dev_fs, dev_fe, dev_fw, dev_df, dev_dn, dev_ds, dev_de, 
+    calc_resu<<<gridDim, blockDim>>>(dev_fn, dev_fs, dev_fe, dev_fw, dev_df, dev_dn, dev_ds, dev_de, 
 	dev_dw, dev_areau_e, dev_areau_n, dev_areau_s, dev_areau_w, dev_epsilon1, dev_y, dev_x,
 	dev_xm, dev_afw, dev_afe, dev_afn, dev_afs, dev_aw, dev_ae, dev_as, dev_an,
     dev_aww, dev_aee, dev_ass, dev_ann, dev_ap, dev_u_e, dev_u_ee, dev_u_n, dev_u_nn, 

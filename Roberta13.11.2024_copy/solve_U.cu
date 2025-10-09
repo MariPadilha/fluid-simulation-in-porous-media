@@ -30,7 +30,8 @@ static __global__ void calc_3(double *dev_res_u, double *dev_um, double *dev_um_
 
 double solve_U(double *dev_um, double *dev_vm, double *dev_um_n, double *dev_um_tau, double *dev_vm_tau, double *dev_um_n_tau, double *dev_p){
     double *dev_ui, *dev_ru, *dev_res_u;
-    dim3 blocks, threads(16, 16);
+    dim3 blockDim(16, 16);
+    dim3 gridDim((imax-4 + blockDim.x - 1)/blockDim.x, (jmax-3 + blockDim.y - 1)/blockDim.y);
 
     cudaMalloc((void**)&dev_ru, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_ui, sizeof(double)*(imax+2)*(jmax+1));
@@ -38,19 +39,17 @@ double solve_U(double *dev_um, double *dev_vm, double *dev_um_n, double *dev_um_
     
     RESU(dev_um_tau, dev_vm_tau, dev_p, dev_ru);
 
-    blocks = grid_2d((imax-1-3), (jmax-1-2));
-    calc_1<<<blocks, threads>>>(dev_res_u, dev_um, dev_um_tau, dev_ru, dev_ui, jmax, imax, dt, dtau);
+    calc_1<<<gridDim, blockDim>>>(dev_res_u, dev_um, dev_um_tau, dev_ru, dev_ui, jmax, imax, dt, dtau);
 
     bcUV(dev_ui, dev_vm_tau);
     RESU(dev_ui, dev_vm_tau, dev_p, dev_ru);
 
-    blocks = grid_2d((imax-1-3), (jmax-1-2));
-    calc_2<<<blocks, threads>>>(dev_res_u, dev_um, dev_um_tau, dev_ru, dev_ui, jmax, imax, dt, dtau);
+    calc_2<<<gridDim, blockDim>>>(dev_res_u, dev_um, dev_um_tau, dev_ru, dev_ui, jmax, imax, dt, dtau);
     
     bcUV(dev_ui, dev_vm_tau);
     RESU(dev_ui, dev_vm_tau, dev_p, dev_ru);
 
-    calc_3<<<blocks, threads>>>(dev_res_u, dev_um, dev_um_tau, dev_um_n_tau, dev_ru, dev_ui, jmax, imax, dt, dtau);
+    calc_3<<<gridDim, blockDim>>>(dev_res_u, dev_um, dev_um_tau, dev_um_n_tau, dev_ru, dev_ui, jmax, imax, dt, dtau);
 
     bcUV(dev_um_n_tau, dev_vm_tau);
 

@@ -1,10 +1,6 @@
 #include "comum.h"
 #define idx i*(jmax+1)+j
 
-///////////////////////////////////////////////////////////////
-//já verifiquei indices das matrizes linearizadas/////////////
-///////////////////////////////////////////////////////////////
-
 __global__ void calc_1(double *dev_dudx, double *dev_dvdy, double *dev_rp, double *dev_pi, double *dev_um_n, double *dev_vm_n, double *dev_areau_e, double *dev_areav_n, double *dev_areau_w, double *dev_areav_s, double *dev_p, int imax, int jmax, double dtau, double beta){
     int i = blockIdx.x * blockDim.x + threadIdx.x + 2;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 2;
@@ -35,20 +31,19 @@ __global__ void calc_3(double *dev_res_p, double *dev_pn, double *dev_rp, double
 }
 
 double solve_P(double *dev_p, double *dev_um_n, double *dev_vm_n, double *dev_pn){
-    dim3 threads(16,16), blocks;
+    dim3 blockDim(16,16);
+    dim3 gridDimCalc1_3((imax-3 + blockDim.x - 1)/blockDim.x, (jmax-3 + blockDim.y - 1)/blockDim.y);
+    dim3 gridDimCalc2((imax-3 + blockDim.x - 1)/blockDim.x, (jmax-4 + blockDim.y - 1)/blockDim.y);
 
-    blocks = grid_2d((imax-1-2), (jmax-1-2));
-    calc_1<<<blocks, threads>>>(dev_dudx, dev_dvdy, dev_rp, dev_pi, dev_um_n, dev_vm_n, dev_areau_e, dev_areav_n, dev_areau_w, dev_areav_s, dev_p, imax, jmax, dtau, iterations.beta);
-
-    bcP(dev_pi);
-
-    blocks = grid_2d((imax-1-2), (jmax-1-3));
-    calc_2<<<blocks, threads>>>(dev_pi, dev_p, dev_rp, jmax, imax, dtau, iterations.beta);
+    calc_1<<<gridDimCalc1_3, blockDim>>>(dev_dudx, dev_dvdy, dev_rp, dev_pi, dev_um_n, dev_vm_n, dev_areau_e, dev_areav_n, dev_areau_w, dev_areav_s, dev_p, imax, jmax, dtau, iterations.beta);
 
     bcP(dev_pi);
 
-    blocks = grid_2d((imax-1-2), (jmax-1-2));
-    calc_3<<<blocks, threads>>>(dev_res_p, dev_pn, dev_rp, dev_p, dev_pi, jmax, imax, dtau, iterations.beta);
+    calc_2<<<gridDimCalc2, blockDim>>>(dev_pi, dev_p, dev_rp, jmax, imax, dtau, iterations.beta);
+
+    bcP(dev_pi);
+
+    calc_3<<<gridDimCalc1_3, blockDim>>>(dev_res_p, dev_pn, dev_rp, dev_p, dev_pi, jmax, imax, dtau, iterations.beta);
 
     bcP(dev_pn);
 

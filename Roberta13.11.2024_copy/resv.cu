@@ -4,7 +4,7 @@
 __global__ void calc_resv(double *dev_fn, double *dev_fs, double *dev_fe, double *dev_fw, double *dev_df, double *dev_dn, double *dev_ds, double *dev_de, 
 	double *dev_dw, double *dev_areav_e, double *dev_areav_n, double *dev_areav_s, double *dev_areav_w, double *dev_epsilon1, double *dev_y, double *dev_x,
 	double *dev_xm, double *dev_afw, double *dev_afe, double *dev_afn, double *dev_afs, double *dev_aw, double *dev_ae, double *dev_as, double *dev_an,
-    double *dev_aww, double *dev_aee, double *dev_ass, double *dev_ann, double *dev_ap, double *dev_v_e, double *dev_v_ee, double *dev_v_n, double *dev_v_nn, 
+        double *dev_aww, double *dev_aee, double *dev_ass, double *dev_ann, double *dev_ap, double *dev_v_e, double *dev_v_ee, double *dev_v_n, double *dev_v_nn, 
 	double *dev_v_p, double *dev_v_s, double *dev_v_ss, double *dev_v_w, double *dev_v_ww, double *dev_u_p, double *dev_ym, double *dev_dvdydy, double *dev_dydudx,
 	double *dev_q_art, double *dev_artdivv, double *dev_liga_poros, double b_art, int imax, int jmax, double re, double darcy_number, double cf, double invfr2,
 	double *dev_um, double *dev_vm, double *dev_p, double *dev_t, double *dev_rv){
@@ -92,10 +92,10 @@ __global__ void calc_resv(double *dev_fn, double *dev_fs, double *dev_fe, double
 
 //--- ResV ---
 void RESV(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, double *dev_rv){
-    int threads = 256;
-    dim3 blocks = grid_1d((imax-2-3)*(jmax-1-3), threads);
+    dim3 blockDim(16,16);
+    dim3 gridDim((imax-5 + blockDim.x - 1)/blockDim.x, (jmax-4 + blockDim.y - 1)/blockDim.y);
 
-    calc_resv<<<blocks, threads>>>(dev_fn, dev_fs, dev_fe, dev_fw, dev_df, dev_dn, dev_ds,
+    calc_resv<<<gridDim, blockDim>>>(dev_fn, dev_fs, dev_fe, dev_fw, dev_df, dev_dn, dev_ds,
     dev_de, dev_dw, dev_areav_e, dev_areav_n, dev_areav_s, dev_areav_w, dev_epsilon1, dev_y, 
     dev_x, dev_xm, dev_afw, dev_afe, dev_afn, dev_afs, dev_aw, dev_ae, dev_as, 
     dev_an, dev_aww, dev_aee, dev_ass, dev_ann, dev_ap, dev_v_e, dev_v_ee, dev_v_n, 
