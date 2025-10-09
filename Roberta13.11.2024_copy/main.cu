@@ -201,8 +201,8 @@ int main(int argc, char *argv[]){
 
         //--- End of pseudo-time calculation ---
         atualizar_matrizes_linearizadas<<<gridDimUm, blockDim>>>(dev_um_n_tau, dev_um, imax+1, jmax, 1, jmax+1);
-        for(int i = 1; i < imax+1; i++){
-            for(int j = 1; j < jmax; j++){
+        for(int i = 1; i <= (imax+1); i++){
+            for(int j = 1; j <= jmax; j++){
                 printf("[%i][%i] = %lf\n", i, j, dev_um_n_tau[i*(jmax+1)+j]);
             }
         }
