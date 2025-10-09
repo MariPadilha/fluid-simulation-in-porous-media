@@ -1,12 +1,6 @@
 #include "comum.h"
 #define idx i*(jmax+1)+j
 
-////////////////////////////////////////////////////
-//já verifiquei indices das matrizes linearizadas///
-////////////////////////////////////////////////////
-
-//implementar radix sort para o residual
-
 static __global__ void calc_1(double *dev_res_u, double *dev_um, double *dev_um_tau, double *dev_ru, double *dev_ui, int jmax, int imax, double dt, double dtau){
     int i = blockIdx.x * blockDim.x + threadIdx.x + 3;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 2;

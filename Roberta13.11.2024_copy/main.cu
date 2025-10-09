@@ -54,8 +54,8 @@ int main(int argc, char *argv[]){
     cudaMallocManaged((void**)&dev_um, sizeof(double)*(imax+2)*(jmax+1));
     cudaMallocManaged((void**)&dev_vm, sizeof(double)*(imax+1)*(jmax+2));
     cudaMalloc((void**)&dev_um_n, sizeof(double)*(imax+2)*(jmax+1));
-    cudaMalloc((void**)&dev_um_tau, sizeof(double)*(imax+2)*(jmax+1));
-    cudaMallocManaged((void**)&dev_um_n_tau, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMallocManaged((void**)&dev_um_tau, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_um_n_tau, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_vm_n, sizeof(double)*(imax+1)*(jmax+2));
     cudaMalloc((void**)&dev_vm_tau, sizeof(double)*(imax+1)*(jmax+2));
     cudaMalloc((void**)&dev_vm_n_tau, sizeof(double)*(imax+1)*(jmax+2));
@@ -162,7 +162,7 @@ int main(int argc, char *argv[]){
 
    for(int i = 1; i <= (imax+1); i++){
        for(int j = 1; j <= jmax; j++){
-           printf("[%i][%i] = %lf\n", i, j, dev_um_n_tau[i*(jmax+1)+j]);
+           printf("[%i][%i] = %lf\n", i, j, dev_um_tau[i*(jmax+1)+j]);
        }
    }
     //--- Physical time step ---
