@@ -16,6 +16,7 @@ SUBROUTINE init
 
 END SUBROUTINE init
 
+
 SUBROUTINE IC(um,vm,p,T,C) !condicoes iniciais
     USE comum
     IMPLICIT NONE
@@ -26,8 +27,8 @@ SUBROUTINE IC(um,vm,p,T,C) !condicoes iniciais
     REAL(8), DIMENSION(1:imax  , 1:jmax)   :: P, T, C
     REAL(8) :: eta_e
     
-    um = 0.d0
     vm = 1.0d-3*v_i
+    um = 0.d0
     p = 1.0d0
     T = Tinf
     C = 0.d0
@@ -46,6 +47,7 @@ SUBROUTINE IC(um,vm,p,T,C) !condicoes iniciais
 
 RETURN
 END SUBROUTINE IC
+
 
 SUBROUTINE restart(um,vm,p,T,C)
     USE comum
