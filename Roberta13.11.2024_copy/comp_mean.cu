@@ -6,14 +6,13 @@ __global__ void pontos_medios(double *dev_u, double *dev_v, double *dev_um, doub
 
     if(i <= imax && j <= jmax){
         dev_u[i*(jmax+1)+j] = (dev_um[(i+1)*(jmax+1)+j]+dev_um[i*(jmax+1)+j])*0.50;
-        printf("[%i][%i] = %lf\n", i, j, dev_u[i*(jmax+1)+j]);
         dev_v[i*(jmax+1)+j] = (dev_vm[i*(jmax+2)+(j+1)]+dev_vm[i*(jmax+2)+j])*0.50;
     }
 }
 
 void comp_mean(double *dev_u, double *dev_v, double *dev_um, double *dev_vm){
-    int threads = 256;
-    dim3 blocks = grid_2d(imax-1, jmax-1);
+    dim3 blockDim(16, 16);
+    dim3 gridDim((imax + blockDim.x - 1)/blockDim.x, (jmax + blockDim.y - 1)/blockDim.y);
     
-    pontos_medios<<<blocks, threads>>>(dev_u, dev_v, dev_um, dev_vm, imax, jmax);
+    pontos_medios<<<gridDim, blockDim>>>(dev_u, dev_v, dev_um, dev_vm, imax, jmax);
 }
