@@ -280,11 +280,6 @@ int main(){
     */
 
     //--- Compute the velocity of mean points ---
-    for(i = 1; i <= imax; i++){
-        for(j = 1; j <= jmax; j++){
-            printf("[%i][%i] = %lf\n", i, j, u[i][j]);
-        }
-    }
     comp_mean(u, v, um, vm);
     transient(u, v, p, t, c, itc);
 
