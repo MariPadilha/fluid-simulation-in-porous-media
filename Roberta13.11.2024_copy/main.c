@@ -163,7 +163,11 @@ int main(){
     printf("init %lf/n", duration);
     duration = omp_get_wtime();
     */
-
+   for(int i = 1; i <= (imax+1); i++){
+       for(int j = 1; j <= jmax; j++){
+           printf("[%i][%i] = %lf\n", i, j, um_n_tau[i][j]);
+       }
+   }
     //--- Physical time step ---
     while(time < iterations.final_time){
         time = time + dt;
@@ -176,11 +180,6 @@ int main(){
             
             //--- Solve Continuity Equation ---
             solve_P(p, um_n_tau, vm_n_tau, pn, &residual_p);
-            for(i = 1; i <= imax+1; i++){
-                for(j = 1; j <= jmax; j++){
-                    printf("[%i][%i] = %lf\n", i, j, um_n_tau[i][j]);
-                }
-            }
             
             //--- Solve Energy Equation ---
             solve_Z(um_n_tau, vm_n_tau, t, t_n_tau, t_tau);
