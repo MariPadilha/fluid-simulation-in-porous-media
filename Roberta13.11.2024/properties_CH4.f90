@@ -6,7 +6,6 @@ subroutine properties
     REAL(8), parameter :: X_met=0.25d0, X_air=0.75d0
 
     rho_air = 356.6123426031d0 * Too ** (- 1.0013371777d0)
-    write(*,*)'rho_air',rho_air
 
     cp_air = 4.73251788718275d-11 * Too ** 4.d0 - 2.5966626136914d-7 * &
              Too ** 3.d0 + 0.0004309589d0 * Too ** 2.d0 - 0.0748376208d0 * Too + 993.1365094124d0

@@ -13,6 +13,7 @@ SUBROUTINE mesh
     ENDDO
 
     !--- APLICA O REFINAMENTO NA MALHA CONSTANTE ---
+
     DO i = imax/2+1, imax
         etax = ( X(i) - X(imax) ) / ( X(imax/2+1) - X(imax) )
         sx = Px_grid * etax + (1.d0 - Px_grid) &
@@ -34,7 +35,7 @@ SUBROUTINE mesh
              * (1.d0 - ( (tanh(Q_grid * (1.d0 - etay)) ) / tanh(Q_grid) ) )
         Y(j) = Y(jmax) - sy * (Y(jmax) - Y(int(y_down/dx_c)+1) )
     ENDDO
-
+    
     DO j = int(y_down/dx_c)+1, 1, -1
         etay = ( Y(j) + Y(jmax) ) / ( Y(int(y_down/dx_c)+1) + Y(jmax) )
         sy = Py_grid * etay + (1.d0 - Py_grid) &
@@ -42,16 +43,13 @@ SUBROUTINE mesh
         Y(j) = -Y(jmax) - sy * (-Y(jmax) - Y(int(y_down/dx_c)+1) )
     ENDDO
 
+
     !--- CALCULA OS PONTOS MEDIOS DA MALHA XM E YM ---
     xm(1) = -(x(2) + x(1)) * 0.5d0
     xm(imax+1) = (x(imax) + x(imax-1)) * 0.5d0 + (x(imax) - x(imax-1))
 
     DO i= 2, imax
         xm(i) = (x(i) + x(i-1)) * 0.5d0
-    ENDDO
-
-    DO i= 2, imax
-        write(*,*)'xm[',i,']: ', xm(i)
     ENDDO
 
     ym(1) = y(1) - (y(2) - y(1)) * 0.5d0

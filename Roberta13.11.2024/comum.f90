@@ -41,7 +41,7 @@ MODULE comum
     REAL(8), PARAMETER :: y_up = 15.     !altura em y+
     REAL(8), PARAMETER :: y_down = 5.    !altura em y-
     REAL(8), PARAMETER :: Hvert = y_up + y_down !altura total
-    INTEGER, PARAMETER :: imax = 10 !51 numero de pontos da malha em x
+    INTEGER, PARAMETER :: imax = 51 !numero de pontos da malha em x
     REAL(8), PARAMETER :: dx_c = Lhori / (imax-1) !dita o tamanho de dy e dx
     INTEGER, PARAMETER :: jmax = (Hvert / dx_c) + 1!numero de pontos da malha em y
     !INTEGER, PARAMETER :: imax = int_points + 1 !(Lhori/dx_c)+1!numero de pontos da malha em x
@@ -122,12 +122,10 @@ MODULE comum
     REAL(8), DIMENSION(2:imax,1:jmax) :: Dn, Ds, De, Dw
     real(8), DIMENSION(2:imax,1:jmax) :: u_W, u_WW, u_E, u_EE, u_S, u_SS, u_N, u_NN, u_P
     real(8), DIMENSION(2:imax,1:jmax) :: v_W, v_WW, v_E, v_EE, v_S, v_SS, v_N, v_NN, v_P
-    real(8), DIMENSION(2:imax,1:jmax) :: q_art
-    real(8), DIMENSION(2:imax,1:jmax) :: dudxdx, dvdydy, dxdvdy, dydudx
-    
-    
     real(8), DIMENSION(2:imax-1,1:jmax) :: afw, afe, afn, afs !alpha
+    real(8), DIMENSION(2:imax,1:jmax) :: q_art
     real(8) :: artDivU(imax,jmax), artDivV(imax,jmax)
+    real(8), DIMENSION(2:imax,1:jmax) :: dudxdx, dvdydy, dxdvdy, dydudx
     
     REAL(8), DIMENSION(2:imax-1,1:jmax) :: dudx, dvdy
     REAL(8), DIMENSION(1:imax,1:jmax) :: RP, Pi, res_p

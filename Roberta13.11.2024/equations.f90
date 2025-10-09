@@ -107,6 +107,7 @@ subroutine RESU(um,vm,p,RU)
 return
 end subroutine RESU
 
+
 !--- upwind_U ---
 subroutine upwind_Ui(um,vm,p,RU,j)
     use comum
@@ -164,6 +165,7 @@ subroutine upwind_Ui(um,vm,p,RU,j)
 
 return
 end subroutine upwind_Ui
+
 
 !--- upwind_U ---
 subroutine upwind_Uj(um,vm,p,RU,i)
@@ -223,6 +225,7 @@ subroutine upwind_Uj(um,vm,p,RU,i)
 return
 end subroutine upwind_Uj
 
+
 !--- solve_U ---
 subroutine solve_U(um,vm,um_n,um_tau,vm_tau,um_n_tau,p,residual_u)
     use comum
@@ -267,6 +270,7 @@ subroutine solve_U(um,vm,um_n,um_tau,vm_tau,um_n_tau,p,residual_u)
 
 return
 end subroutine solve_U
+
 
 !--- ResV ---
 subroutine RESV(um,vm,p,T,RV)
