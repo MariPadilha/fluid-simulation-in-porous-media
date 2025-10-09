@@ -179,6 +179,11 @@ int main(){
             //--- Solve Energy Equation ---
             solve_Z(um_n_tau, vm_n_tau, t, t_n_tau, t_tau);
             solve_C(um_n_tau, vm_n_tau, c, c_n_tau, c_tau);
+            for(i = 1; i <= imax+1; i++){
+                for(j = 1; j <= jmax; j++){
+                    printf("[%i][%i] = %lf\n", i, j, um_n_tau[i][j]);
+                }
+            }
 
             /*--- check convergence ---
             CALL convergence(itc, error, residual_p, residual_u, residual_v)
