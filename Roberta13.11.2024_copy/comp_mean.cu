@@ -6,6 +6,7 @@ __global__ void pontos_medios(double *dev_u, double *dev_v, double *dev_um, doub
 
     if(i <= imax && j <= jmax){
         dev_u[i*(jmax+1)+j] = (dev_um[(i+1)*(jmax+1)+j]+dev_um[i*(jmax+1)+j])*0.50;
+        printf("[%i][%i] = %lf\n", i, j, dev_u[i*(jmax+1)+j]);
         dev_v[i*(jmax+1)+j] = (dev_vm[i*(jmax+2)+(j+1)]+dev_vm[i*(jmax+2)+j])*0.50;
     }
 }
