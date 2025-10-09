@@ -244,10 +244,14 @@ int main(int argc, char *argv[]){
     !write (550,*) time
     !close(550)
     */
-
     //--- Compute the velocity of mean points ---
     comp_mean(dev_u, dev_v, dev_um, dev_vm);
     
+    for(int i = 1; i <= imax; i++){
+        for(int j = 1; j <= jmax; j++){
+            printf("[%i][%i] = %lf\n", i, j, dev_u[i*(jmax+1)+j]);
+        }
+    }
     #ifdef DEBUG
     transient(dev_u, dev_v, dev_p, dev_t, dev_c, itc);
     #endif
