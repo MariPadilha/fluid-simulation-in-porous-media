@@ -163,11 +163,6 @@ int main(){
     printf("init %lf/n", duration);
     duration = omp_get_wtime();
     */
-   for(int i = 1; i <= (imax+1); i++){
-       for(int j = 1; j <= jmax; j++){
-           printf("[%i][%i] = %lf\n", i, j, um_n_tau[i][j]);
-       }
-   }
     //--- Physical time step ---
     while(time < iterations.final_time){
         time = time + dt;
