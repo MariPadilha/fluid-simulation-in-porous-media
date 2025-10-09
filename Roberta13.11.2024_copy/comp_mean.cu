@@ -12,7 +12,7 @@ __global__ void pontos_medios(double *dev_u, double *dev_v, double *dev_um, doub
 
 void comp_mean(double *dev_u, double *dev_v, double *dev_um, double *dev_vm){
     dim3 blockDim(16, 16);
-    dim3 gridDim((imax + blockDim.x - 1)/blockDim.x, (jmax + blockDim.y - 1)/blockDim.y);
+    dim3 gridDim((imax-1 + blockDim.x - 1)/blockDim.x, (jmax-1 + blockDim.y - 1)/blockDim.y);
     
     pontos_medios<<<gridDim, blockDim>>>(dev_u, dev_v, dev_um, dev_vm, imax, jmax);
 }

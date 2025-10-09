@@ -54,8 +54,8 @@ int main(int argc, char *argv[]){
     cudaMallocManaged((void**)&dev_um, sizeof(double)*(imax+2)*(jmax+1));
     cudaMallocManaged((void**)&dev_vm, sizeof(double)*(imax+1)*(jmax+2));
     cudaMalloc((void**)&dev_um_n, sizeof(double)*(imax+2)*(jmax+1));
-    cudaMallocManaged((void**)&dev_um_tau, sizeof(double)*(imax+2)*(jmax+1));
-    cudaMalloc((void**)&dev_um_n_tau, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_um_tau, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMallocManaged((void**)&dev_um_n_tau, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_vm_n, sizeof(double)*(imax+1)*(jmax+2));
     cudaMalloc((void**)&dev_vm_tau, sizeof(double)*(imax+1)*(jmax+2));
     cudaMalloc((void**)&dev_vm_n_tau, sizeof(double)*(imax+1)*(jmax+2));
@@ -200,6 +200,12 @@ int main(int argc, char *argv[]){
 
         //--- End of pseudo-time calculation ---
         atualizar_matrizes_linearizadas<<<gridDimUm, blockDim>>>(dev_um_n_tau, dev_um, imax+1, jmax, 1, jmax+1);
+        cudaDeviceSynchronize();
+        for(int i = 1; i <= imax+1; i++){
+            for(int j = 1; j <= jmax; j++){
+                printf("[%i][%i] = %lf\n", i, j, dev_um_n_tau[i*(jmax+1)+j]);
+            }
+        }
         atualizar_matrizes_linearizadas<<<gridDimVm, blockDim>>>(dev_vm_n_tau, dev_vm, imax, jmax+1, 1, jmax+2);
         atualizar_matrizes_linearizadas<<<gridDim, blockDim>>>(dev_t_n_tau, dev_t, imax, jmax, 1, jmax+1);
         atualizar_matrizes_linearizadas<<<gridDim, blockDim>>>(dev_c_n_tau, dev_c, imax, jmax, 1, jmax+1);
@@ -247,11 +253,6 @@ int main(int argc, char *argv[]){
     //--- Compute the velocity of mean points ---
     comp_mean(dev_u, dev_v, dev_um, dev_vm);
     
-    for(int i = 1; i <= imax; i++){
-        for(int j = 1; j <= jmax; j++){
-            printf("[%i][%i] = %lf\n", i, j, dev_u[i*(jmax+1)+j]);
-        }
-    }
     #ifdef DEBUG
     transient(dev_u, dev_v, dev_p, dev_t, dev_c, itc);
     #endif
