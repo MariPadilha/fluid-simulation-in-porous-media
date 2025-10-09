@@ -197,6 +197,7 @@ int main(){
             for(i = 1; i <= imax+1; i++){
                 for(j = 1; j <= jmax; j++){
                     um_tau[i][j] = um_n_tau[i][j];
+                    printf("[%i][%i] = %lf\n", i, j, um_n_tau[i][j]);
                 }
             }
 
@@ -222,7 +223,6 @@ int main(){
         for(i = 1; i <= imax+1; i++){
             for(j = 1; j <= jmax; j++){
                 um[i][j] = um_n_tau[i][j];
-                printf("[%i][%i] = %lf\n", i, j, um_n_tau[i][j]);
             }
         }
         
