@@ -12,15 +12,15 @@ __global__ void atualizar_matrizes_linearizadas(double *origem, double *destino,
     int i = blockIdx.x * blockDim.x + threadIdx.x + inicio;
     int j = blockIdx.y * blockDim.y + threadIdx.y + inicio;
     
-    if(i <= tamanhoLinha && j <= tamanhoColuna){
-        destino[i*(coluna)+j] = origem[i*(coluna)+j];
-    }
+    if(i > tamanhoLinha || j > tamanhoColuna)return;
+        
+    destino[i*(coluna)+j] = origem[i*(coluna)+j];
 }
 
 __global__ void atualiza_tc(double *dev_t, double *dev_c, int *dev_flag, double temp_cylinder, double concentracao_inicial, int c_f, int imax, int jmax){
     int i = blockIdx.x * blockDim.x + threadIdx.x + 1;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 1;
-    if(i > imax && j > jmax) return;
+    if(i > imax || j > jmax) return;
     
     if(dev_flag[idx] != c_f){
         dev_t[idx] = temp_cylinder;               
@@ -29,10 +29,10 @@ __global__ void atualiza_tc(double *dev_t, double *dev_c, int *dev_flag, double 
 }
 
 int main(int argc, char *argv[]){
-    int itc, tr, threads = 256;
+    int itc, tr;
     int n_imax, n_itc;
-    dim3 blocks;
-
+    dim3 blockDim(16, 16);  
+    
     if(argc < 3){
         n_imax = N_IMAX;
         n_itc = N_ITC;
@@ -40,11 +40,13 @@ int main(int argc, char *argv[]){
         n_imax = atoi(argv[1]);
         n_itc = atoi(argv[2]);
     }
-
-
+    
     calcular(n_imax, n_itc);         // define imax, jmax, dx_c, etc.
     alocar_globais(); 
-
+    
+    dim3 gridDim((imax + blockDim.x - 1)/blockDim.x, (jmax + blockDim.y - 1)/blockDim.y);
+    dim3 gridDimUm((imax+1 + blockDim.x - 1)/blockDim.x, (jmax + blockDim.y - 1)/blockDim.y);
+    dim3 gridDimVm((imax + blockDim.x - 1)/blockDim.x, (jmax+1 + blockDim.y - 1)/blockDim.y);
     double *dev_um, *dev_vm;
     double *dev_um_n, *dev_vm_n;
     double *dev_um_tau, *dev_vm_tau;
@@ -53,7 +55,7 @@ int main(int argc, char *argv[]){
     cudaMallocManaged((void**)&dev_vm, sizeof(double)*(imax+1)*(jmax+2));
     cudaMalloc((void**)&dev_um_n, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_um_tau, sizeof(double)*(imax+2)*(jmax+1));
-    cudaMalloc((void**)&dev_um_n_tau, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMallocManaged((void**)&dev_um_n_tau, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_vm_n, sizeof(double)*(imax+1)*(jmax+2));
     cudaMalloc((void**)&dev_vm_tau, sizeof(double)*(imax+1)*(jmax+2));
     cudaMalloc((void**)&dev_vm_n_tau, sizeof(double)*(imax+1)*(jmax+2));
@@ -135,8 +137,7 @@ int main(int argc, char *argv[]){
     //--- Create mesh ---
     mesh();
 
-    blocks = grid_2d(imax-1, jmax-2);
-    atualiza_tc<<<blocks, threads>>>(dev_t, dev_c, dev_flag, temp_cylinder, concentracao_inicial, c_f, imax, jmax);
+    atualiza_tc<<<gridDim, blockDim>>>(dev_t, dev_c, dev_flag, temp_cylinder, concentracao_inicial, c_f, imax, jmax);
 
     //--- Set up initial flow field ---
     if(iterations.start_mode == 0){    
@@ -151,12 +152,8 @@ int main(int argc, char *argv[]){
     dtau = 5.e-2;
     dt = 0.5e-2;
 
-    blocks = grid_1d(((imax+1)*jmax), threads);
-    atualizar_matrizes_linearizadas<<<blocks, threads>>>(dev_um, dev_um_tau, imax+1, jmax, 1, jmax+1);
-
-    blocks = grid_1d((imax*(jmax+1)), threads);
-    atualizar_matrizes_linearizadas<<<blocks, threads>>>(dev_vm, dev_vm_tau, imax, jmax+1, 1, jmax+2);
-
+    atualizar_matrizes_linearizadas<<<gridDimUm, blockDim>>>(dev_um, dev_um_tau, imax+1, jmax, 1, jmax+1);
+    atualizar_matrizes_linearizadas<<<gridDimVm, blockDim>>>(dev_vm, dev_vm_tau, imax, jmax+1, 1, jmax+2);
 
     /*duration = omp_get_wtime() - duration;
     printf("init %lf/n", duration);
@@ -193,30 +190,26 @@ int main(int argc, char *argv[]){
                 break;
 
             //--- Update variables ---
-            blocks = grid_1d(((imax+1)*jmax), threads);
-            atualizar_matrizes_linearizadas<<<blocks, threads>>>(dev_um_n_tau, dev_um_tau, imax+1, jmax, 1, jmax+1);
-
-            blocks = grid_1d((imax*(jmax+1)), threads);
-            atualizar_matrizes_linearizadas<<<blocks, threads>>>(dev_vm_n_tau, dev_vm_tau, imax, jmax+1, 1, jmax+2);
-
-            blocks = grid_1d(((imax-1)*(jmax-1)), threads);
-            atualizar_matrizes_linearizadas<<<blocks, threads>>>(dev_pn, dev_p, imax, jmax, 1, jmax+1);
-            atualizar_matrizes_linearizadas<<<blocks, threads>>>(dev_t_n_tau, dev_t_tau, imax, jmax, 1, jmax+1);
-            atualizar_matrizes_linearizadas<<<blocks, threads>>>(dev_c_n_tau, dev_c_tau, imax, jmax, 1, jmax+1);
+            atualizar_matrizes_linearizadas<<<gridDimUm, blockDim>>>(dev_um_n_tau, dev_um_tau, imax+1, jmax, 1, jmax+1);
+            atualizar_matrizes_linearizadas<<<gridDimVm, blockDim>>>(dev_vm_n_tau, dev_vm_tau, imax, jmax+1, 1, jmax+2);
+            atualizar_matrizes_linearizadas<<<gridDim, blockDim>>>(dev_pn, dev_p, imax, jmax, 1, jmax+1);
+            atualizar_matrizes_linearizadas<<<gridDim, blockDim>>>(dev_t_n_tau, dev_t_tau, imax, jmax, 1, jmax+1);
+            atualizar_matrizes_linearizadas<<<gridDim, blockDim>>>(dev_c_n_tau, dev_c_tau, imax, jmax, 1, jmax+1);
 
             itc++;
         }
 
         //--- End of pseudo-time calculation ---
-        blocks = grid_1d(((imax+1)*jmax), threads);
-        atualizar_matrizes_linearizadas<<<blocks, threads>>>(dev_um_n_tau, dev_um, imax+1, jmax, 1, jmax+1);
+        atualizar_matrizes_linearizadas<<<gridDimUm, blockDim>>>(dev_um_n_tau, dev_um, imax+1, jmax, 1, jmax+1);
+        for(int i = 1; i < imax+1; i++){
+            for(int j = 1; j < jmax; j++){
+                printf("[%i][%i] = %lf\n", i, j, dev_um_n_tau[i*(jmax+1)+j]);
+            }
+        }
 
-        blocks = grid_1d((imax*(jmax+1)), threads);
-        atualizar_matrizes_linearizadas<<<blocks, threads>>>(dev_vm_n_tau, dev_vm, imax, jmax+1, 1, jmax+2);
-
-        blocks = grid_1d(((imax-1)*(jmax-1)), threads);
-        atualizar_matrizes_linearizadas<<<blocks, threads>>>(dev_t_n_tau, dev_t, imax, jmax, 1, jmax+1);
-        atualizar_matrizes_linearizadas<<<blocks, threads>>>(dev_c_n_tau, dev_c, imax, jmax, 1, jmax+1);
+        atualizar_matrizes_linearizadas<<<gridDimVm, blockDim>>>(dev_vm_n_tau, dev_vm, imax, jmax+1, 1, jmax+2);
+        atualizar_matrizes_linearizadas<<<gridDim, blockDim>>>(dev_t_n_tau, dev_t, imax, jmax, 1, jmax+1);
+        atualizar_matrizes_linearizadas<<<gridDim, blockDim>>>(dev_c_n_tau, dev_c, imax, jmax, 1, jmax+1);
 
         /*--- Logs of time and intermediate results
         !IF (MOD(tr, n_tr) .EQ. 0) THEN
