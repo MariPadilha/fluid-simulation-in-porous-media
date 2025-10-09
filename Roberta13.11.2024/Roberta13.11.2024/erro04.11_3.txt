@@ -1,0 +1,2 @@
+rm: cannot remove 'data/flametip.dat': No such file or directory
+rm: cannot remove 'data/error.dat': No such file or directory
