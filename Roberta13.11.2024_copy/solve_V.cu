@@ -41,12 +41,6 @@ double solve_V(double *dev_um, double *dev_vm, double *dev_vm_n, double *dev_um_
 
     calc_1<<<gridDim, blockDim>>>(dev_res_v, dev_vm, dev_vm_tau, dev_rv, dev_vi, jmax, imax, dt, dtau);
 
-    for(int i = 1; i <= imax; i++){
-        for(int j = 1; j <= jmax+1; j++){
-            printf("[%i][%i] rv = %lf\n", i, j, dev_rv[i*(jmax+2)+j]);
-        }
-    }
-
     bcUV(dev_um_tau, dev_vi);
     RESV(dev_um_tau, dev_vi, dev_p, dev_t, dev_rv);
 
