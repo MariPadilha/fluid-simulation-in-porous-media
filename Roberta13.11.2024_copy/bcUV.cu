@@ -51,7 +51,7 @@ void bcUV(double *dev_um, double *dev_vm){
     int blocks_j = grid_1d(jmax+1, threads);
     
     contorno_inferior<<<blocks_i, threads>>>(dev_um, dev_vm, imax, jmax, v_i);
-    //contorno_superior<<<blocks_i, threads>>>(dev_um, dev_vm, imax, jmax);
-    //contorno_esquerdo<<<blocks_j, threads>>>(dev_um, dev_vm, imax, jmax);
-    //contorno_direito<<<blocks_j, threads>>>(dev_um, dev_vm, imax, jmax);
+    contorno_superior<<<blocks_i, threads>>>(dev_um, dev_vm, imax, jmax);
+    contorno_esquerdo<<<blocks_j, threads>>>(dev_um, dev_vm, imax, jmax);
+    contorno_direito<<<blocks_j, threads>>>(dev_um, dev_vm, imax, jmax);
 }

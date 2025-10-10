@@ -45,7 +45,7 @@ __global__ void restart_dom_vm(double *dev_vm, double *dev_vmr, int imax, int jm
     int i = blockIdx.x * blockDim.x + threadIdx.x + 1;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 1;
     if(i <= imax && j <= jmax+1){
-        dev_vm[i*(jmax+1)+j] = (j <= rjmax) ? dev_vmr[i*(rjmax+2)+j] : dev_vm[i*(jmax+2)+(j-1)];
+        dev_vm[i*(jmax+2)+j] = (j <= rjmax) ? dev_vmr[i*(rjmax+2)+j] : dev_vm[i*(jmax+2)+(j-1)];
     }
 }
 

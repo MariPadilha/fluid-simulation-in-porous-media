@@ -39,7 +39,6 @@ double solve_U(double *dev_um, double *dev_vm, double *dev_um_n, double *dev_um_
     
     RESU(dev_um_tau, dev_vm_tau, dev_p, dev_ru);
 
-    
     calc_1<<<gridDim, blockDim>>>(dev_res_u, dev_um, dev_um_tau, dev_ru, dev_ui, jmax, imax, dt, dtau);
     
     bcUV(dev_ui, dev_vm_tau);
@@ -48,25 +47,15 @@ double solve_U(double *dev_um, double *dev_vm, double *dev_um_n, double *dev_um_
     calc_2<<<gridDim, blockDim>>>(dev_res_u, dev_um, dev_um_tau, dev_ru, dev_ui, jmax, imax, dt, dtau);
     
     bcUV(dev_ui, dev_vm_tau);
+    
+
     RESU(dev_ui, dev_vm_tau, dev_p, dev_ru);
     
+
     calc_3<<<gridDim, blockDim>>>(dev_res_u, dev_um, dev_um_tau, dev_um_n_tau, dev_ru, dev_ui, jmax, imax, dt, dtau);
     
-    printf("comeca diferente\n");
-    bcUV(dev_um_n_tau, dev_vm_tau);
-    for(int i = 1; i <= imax+1; i++){
-        for(int j = 1; j <= jmax; j++){
-            printf("[%i][%i] vm = %lf\n", i, j, dev_um_n_tau[i*(jmax+2)+j]);
-        }
-    }
 
-    for(int i = 1; i <= imax; i++){
-        for(int j = 1; j <= jmax+1; j++){
-            printf("[%i][%i] um = %lf\n", i, j, dev_um_n_tau[i*(jmax+1)+j]);
-        }
-    }
-        
-    printf("termina diferente\n");
+    bcUV(dev_um_n_tau, dev_vm_tau);
 
     double residual_u =  max_reduce(dev_res_u, imax-1, jmax-2); 
     
