@@ -42,6 +42,13 @@ double solve_U(double *dev_um, double *dev_vm, double *dev_um_n, double *dev_um_
     calc_1<<<gridDim, blockDim>>>(dev_res_u, dev_um, dev_um_tau, dev_ru, dev_ui, jmax, imax, dt, dtau);
     
     bcUV(dev_ui, dev_vm_tau);
+
+    for(int i = 1; i <= imax; i++){
+        for(int j = 1; j <= jmax+1; j++){
+            printf("[%i][%i] vm = %lf\n", i, j, dev_vm_tau[i*(jmax+2)+j]);
+        }
+    }
+    
     RESU(dev_ui, dev_vm_tau, dev_p, dev_ru);
     
     calc_2<<<gridDim, blockDim>>>(dev_res_u, dev_um, dev_um_tau, dev_ru, dev_ui, jmax, imax, dt, dtau);
