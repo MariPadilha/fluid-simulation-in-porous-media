@@ -425,7 +425,7 @@ void RESV(double **um, double **vm, double **p, double **t, double **rv){
 
     for(int i = 1; i <= imax; i++){
         for(int j = 1; j <= jmax+1; j++){
-            printf("[%i][%i] rv = %lf\n", i, j, rv[i][j]);
+            printf("[%i][%i] ap = %lf\n", i, j, ap[i][j]);
         }
     }
 
