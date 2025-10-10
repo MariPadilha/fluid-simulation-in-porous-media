@@ -500,6 +500,11 @@ void solve_U(double **um, double **vm, double **um_n, double **um_tau, double **
     }
 
     RESU(um_tau,vm_tau,p,ru);
+    for(int i = 1; i <= imax+1; i++){
+        for(int j = 1; j <= jmax; j++){
+            printf("[%i][%i] = %lf\n", i, j, um_tau[i][j]);
+        }
+    }
 
     for(j = 2; j <= jmax-1; j++){
         for(i = 3; i <= imax-1; i++){
