@@ -528,14 +528,21 @@ void solve_U(double **um, double **vm, double **um_n, double **um_tau, double **
         }
     }
     
-    
-    bcUV(um_n_tau,vm_tau);
-    
-    for(int i = 1; i <= imax+1; i++){
-        for(int j = 1; j <= jmax; j++){
-            printf("[%i][%i] = %lf\n", i, j, um_n_tau[i][j]);
+    printf("comeca diferente\n");
+    bcUV(um_n_tau, vm_tau);
+    for(int i = 1; i <= imax; i++){
+        for(int j = 1; j <= jmax+1; j++){
+            printf("[%i][%i] vm = %lf\n", i, j, vm_tau[i][j]);
         }
     }
+
+    for(int i = 1; i <= imax+1; i++){
+        for(int j = 1; j <= jmax; j++){
+            printf("[%i][%i] um = %lf\n", i, j, um_n_tau[i][j]);
+        }
+    }
+        
+    printf("termina diferente\n");
 
     (*residual_u) =  maior_valor(res_u, imax+2, jmax+1, 3, 2); 
 
