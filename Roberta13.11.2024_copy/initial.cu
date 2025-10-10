@@ -94,19 +94,19 @@ void init(){
 }
 
 void IC(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, double *dev_c, double *dev_pn){
-    dim3 blocks, threads(16,16);
+    dim3 blockDim(16,16);
+    dim3 gridDimUm((imax+1 + blockDim.x - 1)/blockDim.x, (jmax + blockDim.y - 1)/blockDim.y);
+    dim3 gridDimVm((imax + blockDim.x - 1)/blockDim.x, (jmax+1 + blockDim.y - 1)/blockDim.y);
+    dim3 gridDimPtc((imax + blockDim.x - 1)/blockDim.x, (jmax + blockDim.y - 1)/blockDim.y);
 
     cudaStream_t s1, s2, s3;
     cudaStreamCreate(&s1);
     cudaStreamCreate(&s2);
     cudaStreamCreate(&s3);
 
-    blocks = grid_2d(imax, jmax-1);
-    atualiza_ic_um<<<blocks, threads, 0, s1>>>(dev_um, imax, jmax);
-    blocks = grid_2d(imax-1, jmax);
-    atualiza_ic_vm<<<blocks, threads, 0, s2>>>(dev_vm, v_i, imax, jmax);
-    blocks = grid_2d(imax-1, jmax-1);
-    atualiza_ic_ptc<<<blocks, threads, 0, s3>>>(dev_p, dev_t, dev_c, dev_flag, tinf, temp_cylinder, concentracao_inicial, c_f, imax, jmax);
+    atualiza_ic_um<<<gridDimUm, blockDim, 0, s1>>>(dev_um, imax, jmax);
+    atualiza_ic_vm<<<gridDimVm, blockDim, 0, s2>>>(dev_vm, v_i, imax, jmax);
+    atualiza_ic_ptc<<<gridDimPtc, blockDim, 0, s3>>>(dev_p, dev_t, dev_c, dev_flag, tinf, temp_cylinder, concentracao_inicial, c_f, imax, jmax);
 
     cudaStreamSynchronize(s1);
     cudaStreamSynchronize(s2);
@@ -170,10 +170,10 @@ void restart_dom(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, d
     cudaMalloc((void**)&dev_umr, sizeof(double)*(rimax+2)*(rjmax+1));
     cudaMalloc((void**)&dev_vmr, sizeof(double)*(rimax+1)*(rjmax+2));
     cudaMalloc((void**)&dev_pres, sizeof(double*)*(rimax+1)*(rjmax+1));
-    cudaMalloc((void**)&dev_zr, sizeof(double*)*(rimax+1)*(rjmax+1));
-    cudaMalloc((void**)&dev_tr, sizeof(double*)*(rimax+1)*(rjmax+1));
-    cudaMalloc((void**)&dev_hr, sizeof(double*)*(rimax+1)*(rjmax+1));
-    cudaMalloc((void**)&dev_h_res, sizeof(double*)*(rimax+1)*(rjmax+1));
+    cudaMalloc((void**)&dev_zr, sizeof(double)*(rimax+1)*(rjmax+1));
+    cudaMalloc((void**)&dev_tr, sizeof(double)*(rimax+1)*(rjmax+1));
+    cudaMalloc((void**)&dev_hr, sizeof(double)*(rimax+1)*(rjmax+1));
+    cudaMalloc((void**)&dev_h_res, sizeof(double)*(rimax+1)*(rjmax+1));
 
     printf("RESTARTING PROGRAM\n");
 
