@@ -148,6 +148,12 @@ int main(){
     dtau = 5.e-2;
     dt = 0.5e-2;
 
+    for(int i = 1; i <= imax; i++){
+        for(int j = 1; j <= jmax+1; j++){
+            printf("[%i][%i] vm = %lf\n", i, j, vm[i][j]);
+        }
+    }
+
     for(i = 1; i <= imax+1; i++){
         for(j = 1; j <= jmax; j++){
             um_tau[i][j] = um[i][j];

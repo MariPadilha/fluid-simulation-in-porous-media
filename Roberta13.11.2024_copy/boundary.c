@@ -13,7 +13,7 @@ void bcUV(double **um, double **vm){
         um[i][1] = 0.0;    //DARCY
     }
 
-    /*//------ contorno superior ----------
+    //------ contorno superior ----------
     for(i = 2; i <= (imax); i++){
         vm[i][jmax] = 2.0*vm[i][jmax-2] - vm[i][jmax-1];
         vm[i][(jmax+1)] = 2.0*vm[i][jmax-1] - vm[i][jmax];
@@ -41,7 +41,7 @@ void bcUV(double **um, double **vm){
 
     for(j = 2; j <= (jmax); j++){
         vm[imax][j] =  vm[imax-1][j]; //Darcy
-    }*/
+    }
 }
 
 void bcP(double **pn){
