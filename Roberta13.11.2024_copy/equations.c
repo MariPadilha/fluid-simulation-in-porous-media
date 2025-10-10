@@ -509,6 +509,12 @@ void solve_U(double **um, double **vm, double **um_n, double **um_tau, double **
     }
     
     bcUV(ui,vm_tau);
+    for(int i = 1; i <= imax; i++){
+        for(int j = 1; j <= jmax+1; j++){
+            printf("[%i][%i] vm_tau = %lf\n", i, j, vm_tau[i][j]);
+        }
+    }
+
     RESU(ui,vm_tau,p,ru);
     
     for(j = 2; j <= jmax-1; j++){

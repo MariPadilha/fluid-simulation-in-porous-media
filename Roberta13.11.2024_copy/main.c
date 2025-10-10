@@ -158,12 +158,6 @@ int main(){
             vm_tau[i][j] = vm[i][j];
         }
     }
-    
-    for(int i = 1; i <= imax; i++){
-        for(int j = 1; j <= jmax+1; j++){
-            printf("[%i][%i] vm = %lf\n", i, j, vm_tau[i][j]);
-        }
-    }
 
     /*duration = omp_get_wtime() - duration;
     printf("init %lf/n", duration);
