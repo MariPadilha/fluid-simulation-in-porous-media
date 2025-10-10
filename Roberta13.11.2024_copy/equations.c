@@ -560,19 +560,25 @@ void solve_V(double **um, double **vm, double **vm_n, double **um_tau, double **
         RV[i] = (double*)malloc(sizeof(double)*(jmax+2));
         res_v[i] = (double*)malloc(sizeof(double)*(jmax+2));
     }
-
+    
     /*for(i = 1; i <= imax; i++){
         for(j = 1; j <= jmax; j++){                
-        printf("vm_n_tau [%d][%d] = %.14lf\n", i, j, vm_n_tau[i][j]);
-        }
-    }*/
-
+            printf("vm_n_tau [%d][%d] = %.14lf\n", i, j, vm_n_tau[i][j]);
+            }
+            }*/
+           
     RESV(um_tau,vm_tau,p,T,RV);
-
+    
     for(j = 3; j <= jmax-1; j++){
         for(i = 2; i <= imax-1; i++){
             res_v[i][j] = ((vm[i][j]-vm_tau[i][j]) + RV[i][j]*dt) * dtau;
             vi[i][j] = (vm_tau[i][j] + res_v[i][j]);
+        }
+    }
+    
+    for(int i = 1; i <= imax; i++){
+        for(int j = 1; j <= jmax+1; j++){
+            printf("[%i][%i] res_v = %lf\n", i, j, res_v[i][j]);
         }
     }
 
@@ -596,11 +602,6 @@ void solve_V(double **um, double **vm, double **vm_n, double **um_tau, double **
         }
     }
 
-    for(int i = 1; i <= imax; i++){
-        for(int j = 1; j <= jmax+1; j++){
-            printf("[%i][%i] vi = %lf\n", i, j, vi[i][j]);
-        }
-    }
 
     bcUV(um_tau,vm_n_tau);
     (*residual_v) = maior_valor(res_v, imax+1, jmax+2, 2, 3); 
