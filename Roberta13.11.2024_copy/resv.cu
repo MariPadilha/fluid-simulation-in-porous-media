@@ -105,7 +105,7 @@ void RESV(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, double *
 
     for(int i = 1; i <= imax+1; i++){
         for(int j = 1; j <= jmax; j++){
-            printf("[%i][%i]aw = %lf\n", i, j, dev_aw[i*(jmax+1)+j]);
+            printf("[%i][%i]de = %lf\n", i, j, dev_de[i*(jmax+1)+j]);
         }
     }
 
