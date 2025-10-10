@@ -147,13 +147,7 @@ int main(){
     //--- Pseudo time step ---
     dtau = 5.e-2;
     dt = 0.5e-2;
-
-    for(int i = 1; i <= imax; i++){
-        for(int j = 1; j <= jmax+1; j++){
-            printf("[%i][%i] vm = %lf\n", i, j, vm[i][j]);
-        }
-    }
-
+    
     for(i = 1; i <= imax+1; i++){
         for(j = 1; j <= jmax; j++){
             um_tau[i][j] = um[i][j];
@@ -162,6 +156,12 @@ int main(){
     for(i = 1; i <= imax; i++){
         for(j = 1; j <= jmax+1; j++){
             vm_tau[i][j] = vm[i][j];
+        }
+    }
+    
+    for(int i = 1; i <= imax; i++){
+        for(int j = 1; j <= jmax+1; j++){
+            printf("[%i][%i] vm = %lf\n", i, j, vm_tau[i][j]);
         }
     }
 
@@ -181,11 +181,6 @@ int main(){
             
             //--- Solve Continuity Equation ---
             solve_P(p, um_n_tau, vm_n_tau, pn, &residual_p);
-            for(i = 1; i <= imax+1; i++){
-                for(j = 1; j <= jmax; j++){
-                    printf("[%i][%i] = %lf\n", i, j, um_n_tau[i][j]);
-                }
-            }
             
             //--- Solve Energy Equation ---
             solve_Z(um_n_tau, vm_n_tau, t, t_n_tau, t_tau);
