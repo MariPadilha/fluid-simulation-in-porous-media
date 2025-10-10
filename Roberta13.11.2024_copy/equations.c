@@ -500,36 +500,37 @@ void solve_U(double **um, double **vm, double **um_n, double **um_tau, double **
     }
 
     RESU(um_tau,vm_tau,p,ru);
-    for(int i = 1; i <= imax+1; i++){
-        for(int j = 1; j <= jmax; j++){
-            printf("[%i][%i] = %lf\n", i, j, um_tau[i][j]);
-        }
-    }
-
+    
     for(j = 2; j <= jmax-1; j++){
         for(i = 3; i <= imax-1; i++){
             res_u[i][j] = ((um[i][j]-um_tau[i][j]) + ru[i][j]*dt) * dtau;
             ui[i][j] = um_tau[i][j] + res_u[i][j];
         }
     }
-
+    
     bcUV(ui,vm_tau);
     RESU(ui,vm_tau,p,ru);
-
+    
     for(j = 2; j <= jmax-1; j++){
         for(i = 3; i <= imax-1; i++){
             res_u[i][j] = ((um[i][j]-um_tau[i][j]) + ru[i][j]*dt) * dtau;
             ui[i][j] = 0.75 * um_tau[i][j] + 0.25 * (ui[i][j]+res_u[i][j]);            
         }
     }
-
+    
     bcUV(ui,vm_tau);
     RESU(ui,vm_tau,p,ru);
-
+    
     for(j = 2; j <= jmax-1; j++){
         for(i = 3; i <= imax-1; i++){
             res_u[i][j] = ((um[i][j]-um_tau[i][j]) + ru[i][j]*dt) * dtau;
             um_n_tau[i][j] = 1.0 / 3.0 * um_tau[i][j] + 2.0 / 3.0 * (ui[i][j]+res_u[i][j]); 
+        }
+    }
+    
+    for(int i = 1; i <= imax+1; i++){
+        for(int j = 1; j <= jmax; j++){
+            printf("[%i][%i] = %lf\n", i, j, um_n_tau[i][j]);
         }
     }
 
