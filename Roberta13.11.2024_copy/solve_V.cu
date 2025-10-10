@@ -33,9 +33,9 @@ double solve_V(double *dev_um, double *dev_vm, double *dev_vm_n, double *dev_um_
     dim3 blockDim(16,16);
     dim3 gridDim((imax-3 + blockDim.x - 1)/blockDim.x, (jmax-4 + blockDim.y - 1)/blockDim.y);
 
-    cudaMalloc((void**)&dev_rv, sizeof(double)*(imax+1)*(jmax+2));
+    cudaMallocManaged((void**)&dev_rv, sizeof(double)*(imax+1)*(jmax+2));
     cudaMallocManaged((void**)&dev_vi, sizeof(double)*(imax+1)*(jmax+2));
-    cudaMalloc((void**)&dev_res_v, sizeof(double)*(imax+1)*(jmax+2));
+    cudaMallocManaged((void**)&dev_res_v, sizeof(double)*(imax+1)*(jmax+2));
 
     RESV(dev_um_tau, dev_vm_tau, dev_p, dev_t, dev_rv);
 
@@ -43,10 +43,10 @@ double solve_V(double *dev_um, double *dev_vm, double *dev_vm_n, double *dev_um_
 
     for(int i = 1; i <= imax; i++){
         for(int j = 1; j <= jmax+1; j++){
-            printf("[%i][%i] vi = %lf\n", i, j, dev_vi[i*(jmax+2)+j]);
+            printf("[%i][%i] rv = %lf\n", i, j, dev_rv[i*(jmax+2)+j]);
         }
     }
-    
+
     bcUV(dev_um_tau, dev_vi);
     RESV(dev_um_tau, dev_vi, dev_p, dev_t, dev_rv);
 
