@@ -51,6 +51,12 @@ double solve_V(double *dev_um, double *dev_vm, double *dev_vm_n, double *dev_um_
 
     calc_3<<<gridDim, blockDim>>>(dev_res_v, dev_vm, dev_vm_tau, dev_vm_n_tau, dev_rv, dev_vi, jmax, imax, dt, dtau);
 
+    for(int i = 1; i <= imax; i++){
+        for(int j = 1; j <= jmax+1; j++){
+            printf("[%i][%i] vm_n_tau = %lf\n", i, j, dev_vm_n_tau[i*(jmax+2)+j]);
+        }
+    }
+
     bcUV(dev_um_tau, dev_vm_n_tau);
 
     double residual_v = max_reduce(dev_res_v, imax-1, jmax); 

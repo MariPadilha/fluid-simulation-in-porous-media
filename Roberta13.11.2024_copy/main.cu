@@ -58,7 +58,7 @@ int main(int argc, char *argv[]){
     cudaMallocManaged((void**)&dev_um_n_tau, sizeof(double)*(imax+2)*(jmax+1));
     cudaMalloc((void**)&dev_vm_n, sizeof(double)*(imax+1)*(jmax+2));
     cudaMallocManaged((void**)&dev_vm_tau, sizeof(double)*(imax+1)*(jmax+2));
-    cudaMalloc((void**)&dev_vm_n_tau, sizeof(double)*(imax+1)*(jmax+2));
+    cudaMallocManaged((void**)&dev_vm_n_tau, sizeof(double)*(imax+1)*(jmax+2));
     
     double *dev_u, *dev_v, *dev_p, *dev_pn, *dev_h, *dev_t, *dev_z;
     double *dev_c, *dev_t_n_tau, *dev_t_tau, *dev_c_n_tau, *dev_c_tau; 
