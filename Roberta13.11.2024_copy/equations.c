@@ -509,11 +509,6 @@ void solve_U(double **um, double **vm, double **um_n, double **um_tau, double **
     }
     
     bcUV(ui,vm_tau);
-    for(int i = 1; i <= imax; i++){
-        for(int j = 1; j <= jmax+1; j++){
-            printf("[%i][%i] vm_tau = %lf\n", i, j, vm_tau[i][j]);
-        }
-    }
 
     RESU(ui,vm_tau,p,ru);
     
@@ -598,6 +593,12 @@ void solve_V(double **um, double **vm, double **vm_n, double **um_tau, double **
         for(i = 2; i <= imax-1; i++){
             res_v[i][j] =((vm[i][j]-vm_tau[i][j]) +  RV[i][j]*dt) * dtau;
             vm_n_tau[i][j] = (double)(1.0 / 3.0) * vm_tau[i][j] + (double)(2.0 / 3.0) * (vi[i][j] + res_v[i][j]); 
+        }
+    }
+
+    for(int i = 1; i <= imax; i++){
+        for(int j = 1; j <= jmax+1; j++){
+            printf("[%i][%i] vi = %lf\n", i, j, vi[i][j]);
         }
     }
 
