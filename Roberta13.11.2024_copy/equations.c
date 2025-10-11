@@ -325,8 +325,8 @@ void RESU(double **um, double **vm, double **p, double **ru){
 void RESV(double **um, double **vm, double **p, double **t, double **rv){
     int i, j;
 
-    for(j = 3; j <= jmax-1; j++){
-        for(i = 3; i <= imax-2; i++){
+    for(i = 3; i <= imax-2; i++){
+        for(j = 3; j <= jmax-1; j++){
             fn[i][j] = 0.5 * (vm[i][j]+vm[i][j+1]) * areav_n[i] / epsilon1[i][j];
             fs[i][j] = 0.5 * (vm[i][j]+vm[i][j-1]) * areav_s[i] / epsilon1[i][j];
             fe[i][j] = 0.5 * (um[i+1][j]+um[i+1][j-1]) * areav_e[j] / epsilon1[i][j];
@@ -425,7 +425,7 @@ void RESV(double **um, double **vm, double **p, double **t, double **rv){
 
     for(int i = 1; i <= imax+1; i++){
         for(int j = 1; j <= jmax; j++){
-            printf("[%i][%i] fe = %lf\n", i, j, fe[i][j]);
+            printf("[%i][%i] um = %lf\n", i, j, um[i][j]);
         }
     }
 
