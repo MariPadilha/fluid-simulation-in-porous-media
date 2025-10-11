@@ -103,10 +103,10 @@ void RESV(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, double *
     dev_dydudx, dev_q_art, dev_artdivv, dev_liga_poros, iterations.b_art, imax, jmax, re, darcy_number, 
     cf, invfr2, dev_um, dev_vm, dev_p, dev_t, dev_rv);
 
-    for(int i = 1; i <= jmax+1; i++){
-        //for(int j = 1; j <= jmax; j++){
-            printf("[%i]areav = %lf\n", i, dev_areav_e[i]);
-        //}
+    for(int i = 1; i <= imax; i++){
+        for(int j = 1; j <= jmax; j++){
+            printf("[%i][%i]epilson = %lf\n", i, j, dev_epsilon1[i*(jmax+1)+j]);
+        }
     }
 
     upwind_Vi(dev_um,dev_vm, dev_p,dev_rv, dev_t, 2);

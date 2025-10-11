@@ -2,26 +2,26 @@
 
 __global__ void calc_areau_n_s(double *dev_x, double *dev_areau_n, double *dev_areau_s, int imax){
     int i = blockIdx.x * blockDim.x + threadIdx.x + 2;
-    if(i > imax) return;
-
-    dev_areau_n[i] = dev_x[i] - dev_x[i-1];
-    dev_areau_s[i] = dev_x[i] - dev_x[i-1];
+    if(i <= imax){
+        dev_areau_n[i] = dev_x[i] - dev_x[i-1];
+        dev_areau_s[i] = dev_x[i] - dev_x[i-1];
+    }
 }
 
 __global__ void calc_areav_n_s(double *dev_xm, double *dev_areav_n, double *dev_areav_s, int imax){
     int i = blockIdx.x * blockDim.x + threadIdx.x + 1;
-    if(i > imax) return;
-
-    dev_areav_n[i] = dev_xm[i+1] - dev_xm[i];
-    dev_areav_s[i] = dev_xm[i+1] - dev_xm[i];
+    if(i <= imax){
+        dev_areav_n[i] = dev_xm[i+1] - dev_xm[i];
+        dev_areav_s[i] = dev_xm[i+1] - dev_xm[i];
+    }
 }
 
 __global__ void calc_areau_e_w(double *dev_ym, double *dev_areau_e, double *dev_areau_w, int jmax){
     int i = blockIdx.x * blockDim.x + threadIdx.x + 1;
-    if(i > jmax) return;
-
-    dev_areau_e[i] = dev_ym[i+1] - dev_ym[i];
-    dev_areau_w[i] = dev_ym[i+1] - dev_ym[i];
+    if(i <= jmax){
+        dev_areau_e[i] = dev_ym[i+1] - dev_ym[i];
+        dev_areau_w[i] = dev_ym[i+1] - dev_ym[i];
+    }
 }
 
 __global__ void calc_areav_e_w(double *dev_y, double *dev_areav_e, double *dev_areav_w, int jmax){
