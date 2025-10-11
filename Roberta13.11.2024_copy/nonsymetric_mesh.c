@@ -90,6 +90,11 @@ void mesh(){
         }
     }
 
+
+        
+    for(int i = 1; i <= jmax; i++){
+        printf("[%i] y = %lf\n", i, y[i]);
+    }
     // CALCULA AS AREAS DAS FACES W,E,N,S DE U E V ###################
     for(i = 2; i <= imax; i++){
         areau_n[i] = x[i] - x[i-1];
