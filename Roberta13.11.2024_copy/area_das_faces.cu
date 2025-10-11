@@ -26,10 +26,10 @@ __global__ void calc_areau_e_w(double *dev_ym, double *dev_areau_e, double *dev_
 
 __global__ void calc_areav_e_w(double *dev_y, double *dev_areav_e, double *dev_areav_w, int jmax){
     int i = blockIdx.x * blockDim.x + threadIdx.x + 2;
-    if(i > jmax) return;
-
-    dev_areav_e[i] = dev_y[i] - dev_y[i-1];
-    dev_areav_w[i] = dev_y[i] - dev_y[i-1];
+    if(i <= jmax){
+        dev_areav_e[i] = dev_y[i] - dev_y[i-1];
+        dev_areav_w[i] = dev_y[i] - dev_y[i-1];
+    }
 }
 
 void calcula_area_das_fases(){
@@ -43,8 +43,5 @@ void calcula_area_das_fases(){
 
     calc_areau_e_w<<<blocks, threads>>>(dev_ym, dev_areau_e, dev_areau_w, jmax);
     calc_areav_e_w<<<blocks, threads>>>(dev_y, dev_areav_e, dev_areav_w, jmax);
-    for(int i = 1; i <= jmax; i++){
-        printf("[%i] y = %lf\n", i, dev_y[i]);
-    }
     cudaDeviceSynchronize();
 }
