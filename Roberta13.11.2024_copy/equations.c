@@ -423,10 +423,10 @@ void RESV(double **um, double **vm, double **p, double **t, double **rv){
         }
     }
 
-    for(int i = 1; i <= imax; i++){
-        for(int j = 1; j <= jmax; j++){
-            printf("[%i][%i] afe = %lf\n", i, j, afe[i][j]);
-        }
+    for(int i = 1; i <= jmax+1; i++){
+        //for(int j = 1; j <= jmax; j++){
+            printf("[%i] areav_e = %lf\n", i, areav_e[i]);
+        //}
     }
 
     upwind_Vi(um,vm,p,rv,t,2);
