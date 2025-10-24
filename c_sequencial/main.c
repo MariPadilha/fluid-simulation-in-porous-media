@@ -281,7 +281,6 @@ int main(){
 
     //--- Compute the velocity of mean points ---
     comp_mean(u, v, um, vm);
-    transient(u, v, p, t, c, itc);
 
     //--- output data file ---
     output(um, vm, u, v, p, t, c, itc);

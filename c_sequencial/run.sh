@@ -18,7 +18,6 @@ gcc -O2 -I. \
   main.c  \
   equations.c \
   convergence.c \
-  transient.c \
   output.c \
   probe.c \
   flametip.c \
