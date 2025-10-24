@@ -14,6 +14,7 @@ gcc -c flametip.c -o flametip.o
 nvcc -arch=sm_86 -O2 -std=c++11 -I. -diag-suppress 1650\
   xm_ym.cu \
   x_y.cu \
+  vol.cu \
   solve_C.cu \
   solve_P.cu \
   solve_U.cu \

@@ -1,10 +1,12 @@
 #include "comum.h"
 #define idx i*(jmax+1)+j
+
 void mesh(){
     int i, j;
 
     calcula_x_y();
     calcula_xm_ym();
+    calcula_vol();
     calcula_area_das_fases();
     calcula_dx_dy();
 
@@ -53,16 +55,14 @@ void mesh(){
     for(i = 1; i <= imax; i++){
         for(j = 1; j <= jmax; j++){
             if(dev_flag[idx] != c_f){
-                epsilon1[i*(jmax+1) + j] = porosidade;       
-                liga_poros[i*(jmax+1) + j] = 1.0;
+                dev_epsilon1[i*(jmax+1) + j] = porosidade;       
+                dev_liga_poros[i*(jmax+1) + j] = 1.0;
             }else{ 
-                epsilon1[i*(jmax+1) + j] = 1.0;
-                liga_poros[i*(jmax+1) + j] = 0.0;
+                dev_epsilon1[i*(jmax+1) + j] = 1.0;
+                dev_liga_poros[i*(jmax+1) + j] = 0.0;
             }
         } 
     }
-
-    cudaMemcpy(dev_epsilon1, epsilon1, sizeof(double)*(imax+1)*(jmax+1), cudaMemcpyHostToDevice);
 
 //////////////////////////////////////////////////////////////////////////
     #ifdef DEBUG

@@ -65,7 +65,7 @@ double *dev_areav_w;  //area w de v
 
 // Variáveis auxiliares        
 double *dev_dx, *dev_dy; 
-double *liga_poros, *epsilon1, *dev_epsilon1, *dev_liga_poros;
+double *dev_epsilon1, *dev_liga_poros;
 double rad1 = 1.0;     //raio do cilindro
 
 // flags for obstacle interior, boundary, fluid cells, and close to the boundary
@@ -230,10 +230,6 @@ void alocar_globais(){
 
 ////////////////////////////////////////////////////////
 
-    epsilon1 = (double*)malloc(sizeof(double)*(imax+1)*(jmax+1));
-    liga_poros = (double*)malloc(sizeof(double)*(imax+1)*(jmax+1));
-
-
     dcdx2 = (double**)malloc(sizeof(double*)*(imax+1));
     dcdy2 = (double**)malloc(sizeof(double*)*(imax+1));
     for(int i = 0; i < (imax+1); i++){
@@ -329,8 +325,6 @@ void desalocar_globais(){
         free(dcdx2[i]);
         free(dcdy2[i]);
     }
-    free(epsilon1);
-    free(liga_poros);
     free(dcdx2);
     free(dcdy2);
 }

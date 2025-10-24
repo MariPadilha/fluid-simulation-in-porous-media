@@ -2,6 +2,7 @@
 #define FUNCTIONS_H
 #include "comum.h"
 
+void calcula_vol();
 void upwind_Ui(double *dev_um, double *dev_vm, double *dev_p, double *dev_ru, int j);
 void upwind_Uj(double *dev_um, double *dev_vm, double *dev_p, double *dev_ru, int i);
 void upwind_Vi(double *dev_um, double *dev_vm, double *dev_p, double *dev_rv, double *dev_t, int j);

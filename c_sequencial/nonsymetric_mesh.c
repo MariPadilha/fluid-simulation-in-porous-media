@@ -72,20 +72,20 @@ void mesh(){
     }
 
     //--- CALCULA OS VOLUMES DE U, V E P ---
+    for(i = 2; i <= imax; i++){
     for(j = 1 ; j <= jmax; j++){
-        for(i = 2; i <= imax; i++){
             vol_u[i][j] = (x[i]-x[i-1]) * (ym[j+1]-ym[j]); 
         }
     }
 
+    for(i = 1; i <= imax; i++){
     for(j = 2; j <= jmax; j++){
-        for(i = 1; i <= imax; i++){
             vol_v[i][j] = (y[j]-y[j-1]) * (xm[i+1]-xm[i]); 
         }
     }
 
+    for(i = 1; i <= imax; i++){
     for(j = 2; j <= jmax; j++){
-        for(i = 1; i <= imax; i++){
             vol_p[i][j] = (ym[j+1]-ym[j]) * (xm[i+1]-xm[i]); 
         }
     }
@@ -172,8 +172,8 @@ void mesh(){
     fclose(arquivo);
 
 //------------bloco L=1 ----------------------------------------
-    for(j = 1; j <= jmax; j++){
-        for(i = 1; i <= imax; i++){
+    for(i = 1; i <= imax; i++){
+        for(j = 1; j <= jmax; j++){
             if(x[i] <= -4.0 && y[j] >= 0.5){
                 flag[i][j] = c_i;
             }else{
@@ -182,8 +182,8 @@ void mesh(){
         } 
     }
 //--------- sem objeto no dominio -------------
-    for(j = 2; j <= jmax-1; j++){
-        for(i = 2; i <= imax-1; i++){
+    for(i = 2; i <= imax-1; i++){
+        for(j = 2; j <= jmax-1; j++){
             if((flag[i][j] == c_i && flag[i-1][j] == c_f)
             || (flag[i][j] == c_i && flag[i][j-1] == c_f)
             || (flag[i][j] == c_i && flag[i+1][j] == c_f)

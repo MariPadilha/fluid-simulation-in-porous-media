@@ -34,14 +34,16 @@ __global__ void calc_areav_e_w(double *dev_y, double *dev_areav_e, double *dev_a
 
 void calcula_area_das_fases(){
     int threads = 256;
-    dim3 blocks = grid_1d(imax, threads);
-
+    int blocks = grid_1d(imax-1, threads);
     calc_areau_n_s<<<blocks, threads>>>(dev_x, dev_areau_n, dev_areau_s, imax);
-    calc_areav_n_s<<<blocks, threads>>>(dev_xm, dev_areav_n, dev_areav_s, imax);
 
     blocks = grid_1d(jmax, threads);
-
     calc_areau_e_w<<<blocks, threads>>>(dev_ym, dev_areau_e, dev_areau_w, jmax);
+    
+    blocks = grid_1d(imax, threads);
+    calc_areav_n_s<<<blocks, threads>>>(dev_xm, dev_areav_n, dev_areav_s, imax);
+
+    blocks = grid_1d(jmax-1, threads);
     calc_areav_e_w<<<blocks, threads>>>(dev_y, dev_areav_e, dev_areav_w, jmax);
     cudaDeviceSynchronize();
 }
