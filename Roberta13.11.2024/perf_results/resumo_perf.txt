@@ -1,0 +1,50 @@
+📊 Iniciando benchmarks com perf
+
+───────────────────────────────────────────────
+Executando com 1 thread(s) - 1 repetições
+───────────────────────────────────────────────
+  → Execução 1 de 1 com 1 threads
+    Tempo real (execução 1): 31.958241579s
+    → Tempo médio: 31.958241s
+
+───────────────────────────────────────────────
+Executando com 2 thread(s) - 1 repetições
+───────────────────────────────────────────────
+  → Execução 1 de 1 com 2 threads
+    Tempo real (execução 1): 77.681305092s
+    → Tempo médio: 77.681305s
+
+───────────────────────────────────────────────
+Executando com 4 thread(s) - 1 repetições
+───────────────────────────────────────────────
+  → Execução 1 de 1 com 4 threads
+    Tempo real (execução 1): 1.207461612s
+    → Tempo médio: 1.207461s
+
+───────────────────────────────────────────────
+Executando com 8 thread(s) - 1 repetições
+───────────────────────────────────────────────
+  → Execução 1 de 1 com 8 threads
+    Tempo real (execução 1): 0.291170260s
+    → Tempo médio: .291170s
+
+───────────────────────────────────────────────
+Executando com 16 thread(s) - 1 repetições
+───────────────────────────────────────────────
+  → Execução 1 de 1 com 16 threads
+    Tempo real (execução 1): 0.152750426s
+    → Tempo médio: .152750s
+
+───────────────────────────────────────────────
+Executando com 24 thread(s) - 1 repetições
+───────────────────────────────────────────────
+  → Execução 1 de 1 com 24 threads
+    Tempo real (execução 1): 0.159173795s
+    → Tempo médio: .159173s
+
+───────────────────────────────────────────────
+Executando com 32 thread(s) - 1 repetições
+───────────────────────────────────────────────
+  → Execução 1 de 1 com 32 threads
+    Tempo real (execução 1): 0.152294588s
+    → Tempo médio: .152294s

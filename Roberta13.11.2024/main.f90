@@ -19,7 +19,7 @@ IMPLICIT NONE
     REAL(8), DIMENSION(1:imax,1:jmax)     :: u, v, P, Pn, H, T, Z, C
     REAL(8), DIMENSION(1:imax,1:jmax)     :: T_n_tau, T_tau, C_n_tau, C_tau 
     REAL(8) :: residual_p, residual_u, residual_v, error
-    REAL(8) :: duration 
+    REAL(8) :: duration
     duration = omp_get_wtime()
 !    character(len=128) :: pwd
 !    REAL ETIME, clockTIME, TARRAY(2)

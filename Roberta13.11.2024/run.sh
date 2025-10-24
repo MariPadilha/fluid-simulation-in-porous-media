@@ -6,7 +6,7 @@ sh cleaning.sh  # apaga arquivos que não serão utilizados
 #gfortran -O3 -fopenmp \
 #/opt/nvidia/hpc_sdk/Linux_x86_64/24.9/compilers/bin/pgf90 -O3 -pg \
 #/opt/nvidia/hpc_sdk/Linux_x86_64/24.9/compilers/bin/pgf90 -O3 -stdpar=gpu -Minfo \
-/opt/nvidia/hpc_sdk/Linux_x86_64/25.5/compilers/bin/pgf90 -O2 -mp -pg \
+/opt/nvidia/hpc_sdk/Linux_x86_64/25.5/compilers/bin/pgf90 -O3 -stdpar=multicore -Minfo\
 	comum.f90 \
    properties_CH4.f90 \
    initial.f90 \
