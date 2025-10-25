@@ -1,5 +1,5 @@
 &iterations
-itc_max  = 800000,     !max iterations
+itc_max  = 2,     !max iterations
 nc       = 1,         !erros
 n_tr     = 10,        !plot transient
 n_out    = 100,        !save results
