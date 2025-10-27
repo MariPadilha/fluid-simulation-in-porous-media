@@ -41,7 +41,7 @@ MODULE comum
     REAL(8), PARAMETER :: y_up = 15.     !altura em y+
     REAL(8), PARAMETER :: y_down = 5.    !altura em y-
     REAL(8), PARAMETER :: Hvert = y_up + y_down !altura total
-    INTEGER, PARAMETER :: imax = 10 !numero de pontos da malha em x
+    INTEGER, PARAMETER :: imax = 51*4 !numero de pontos da malha em x
     REAL(8), PARAMETER :: dx_c = Lhori / (imax-1) !dita o tamanho de dy e dx
     INTEGER, PARAMETER :: jmax = (Hvert / dx_c) + 1!numero de pontos da malha em y
     !INTEGER, PARAMETER :: imax = int_points + 1 !(Lhori/dx_c)+1!numero de pontos da malha em x
