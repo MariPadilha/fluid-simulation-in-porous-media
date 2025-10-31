@@ -67,5 +67,4 @@ void upwind_Vi(double *dev_um, double *dev_vm, double *dev_p, double *dev_rv, do
         dev_ap, dev_v_w, dev_v_e, dev_v_s, dev_v_n, dev_v_p, dev_u_p, dev_dvdydy, dev_dydudx, dev_q_art, dev_xm, dev_liga_poros,
         re, dev_p, dev_t, dev_rv, imax, jmax, j, iterations.b_art, invfr2, darcy_number, cf);
 
-    cudaDeviceSynchronize();
 }

@@ -33,6 +33,4 @@ void calcula_xm_ym(){
     blocks = grid_1d(jmax-1, threads);
     ym_borda<<<1,1>>>(dev_y, dev_ym, jmax);
     ym_interior<<<blocks, threads>>>(dev_y, dev_ym, jmax);
-    
-    cudaDeviceSynchronize();
 }

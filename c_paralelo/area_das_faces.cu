@@ -45,5 +45,4 @@ void calcula_area_das_fases(){
 
     blocks = grid_1d(jmax-1, threads);
     calc_areav_e_w<<<blocks, threads>>>(dev_y, dev_areav_e, dev_areav_w, jmax);
-    cudaDeviceSynchronize();
 }

@@ -69,5 +69,4 @@ void upwind_Uj(double *dev_um, double *dev_vm, double *dev_p, double *dev_ru, in
          dev_as, dev_ae, dev_an, dev_ap, dev_u_w, dev_u_e, dev_u_s, dev_u_n, dev_v_p, dev_u_p, dev_dudxdx, dev_dxdvdy,
          dev_q_art, dev_xm, dev_liga_poros, re, dev_p, dev_ru, jmax, imax, i, iterations.b_art, darcy_number, cf, g);
 
-    cudaDeviceSynchronize();
 }

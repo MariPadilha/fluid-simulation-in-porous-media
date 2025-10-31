@@ -199,7 +199,6 @@ int main(int argc, char *argv[]){
 
         //--- End of pseudo-time calculation ---
         atualizar_matrizes_linearizadas<<<gridDimUm, blockDim>>>(dev_um_n_tau, dev_um, imax+1, jmax, 1, jmax+1);
-        cudaDeviceSynchronize();
         atualizar_matrizes_linearizadas<<<gridDimVm, blockDim>>>(dev_vm_n_tau, dev_vm, imax, jmax+1, 1, jmax+2);
         atualizar_matrizes_linearizadas<<<gridDim, blockDim>>>(dev_t_n_tau, dev_t, imax, jmax, 1, jmax+1);
         atualizar_matrizes_linearizadas<<<gridDim, blockDim>>>(dev_c_n_tau, dev_c, imax, jmax, 1, jmax+1);

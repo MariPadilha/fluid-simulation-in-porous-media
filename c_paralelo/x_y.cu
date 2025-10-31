@@ -63,25 +63,19 @@ void calcula_x_y(){
     int threads = 256;
     int blocks = grid_1d(imax, threads);
     x_parte1<<<blocks, threads>>>(dev_x, dx_c, lhori, imax);
-    cudaDeviceSynchronize();
     
     blocks = grid_1d(jmax, threads);
     y_parte1<<<blocks, threads>>>(dev_y, dx_c, y_down, jmax);
-    cudaDeviceSynchronize();
     
     blocks = grid_1d((imax+1)-(int)(imax/2+1), threads);
     x_parte2<<<blocks, threads>>>(dev_x, px_grid, q_grid, imax);
-    cudaDeviceSynchronize();
 
     blocks = grid_1d(imax/2, threads);
     x_parte3<<<blocks, threads>>>(dev_x, px_grid, q_grid, imax);
-    cudaDeviceSynchronize();
     
     blocks = grid_1d((jmax+1)-(int)(y_down/dx_c+1), threads);
     y_parte2<<<blocks, threads>>>(dev_y, y_down, dx_c, py_grid, q_grid, jmax);
-    cudaDeviceSynchronize();
 
     blocks = grid_1d(((int)(y_down/dx_c)+1), threads);
     y_parte3<<<blocks, threads>>>(dev_y, y_down, dx_c, py_grid, q_grid, jmax);
-    cudaDeviceSynchronize();
 }
