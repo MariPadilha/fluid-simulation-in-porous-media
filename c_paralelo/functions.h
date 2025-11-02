@@ -3,8 +3,11 @@
 #include "comum.h"
 
 void calcula_vol();
-void upwind_Ui(double *dev_um, double *dev_vm, double *dev_p, double *dev_ru, int j);
+void upwind_U_fusion(double *dev_um, double *dev_vm, double *dev_p, double *dev_ru, int i, int j);
+void upwind_U_pair(double *dev_um, double *dev_vm, double *dev_p, double *dev_ru);
+void upwind_V_pair(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, double *dev_rv);
 void upwind_Uj(double *dev_um, double *dev_vm, double *dev_p, double *dev_ru, int i);
+void upwind_Ui(double *dev_um, double *dev_vm, double *dev_p, double *dev_ru, int j);
 void upwind_Vi(double *dev_um, double *dev_vm, double *dev_p, double *dev_rv, double *dev_t, int j);
 void upwind_Vj(double *dev_um, double *dev_vm, double *dev_p, double *dev_rv, double *dev_t, int i);
 void RESU(double *dev_um, double *dev_vm, double *dev_p, double *dev_ru);

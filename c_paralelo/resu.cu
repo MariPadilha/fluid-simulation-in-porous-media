@@ -141,8 +141,6 @@ void RESU(double *dev_um, double *dev_vm, double *dev_p, double *dev_ru){
 	dev_xm, dev_ym, dev_liga_poros, iterations.b_art, imax, jmax, re, darcy_number, g, cf,
 	dev_um, dev_vm, dev_p, dev_ru);
 
-    upwind_Ui(dev_um, dev_vm, dev_p, dev_ru, 2);
-    upwind_Ui(dev_um, dev_vm, dev_p, dev_ru, jmax-1);
-    upwind_Uj(dev_um, dev_vm, dev_p, dev_ru, 2);
-    upwind_Uj(dev_um, dev_vm, dev_p, dev_ru, imax);
+    // FUSÃO DE PARES: Ui + Uj em um kernel unificado
+    upwind_U_pair(dev_um, dev_vm, dev_p, dev_ru);
 }

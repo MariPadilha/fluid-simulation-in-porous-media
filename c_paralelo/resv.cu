@@ -143,8 +143,6 @@ void RESV(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, double *
     cf, invfr2, dev_um, dev_vm, dev_p, dev_t, dev_rv);
 
 
-    upwind_Vi(dev_um,dev_vm, dev_p,dev_rv, dev_t, 2);
-    upwind_Vi(dev_um,dev_vm, dev_p,dev_rv, dev_t, jmax);    
-    upwind_Vj(dev_um,dev_vm, dev_p,dev_rv, dev_t, 2);
-    upwind_Vj(dev_um,dev_vm, dev_p,dev_rv, dev_t, imax-1);
+    // Convective terms upwind scheme - FUSED KERNELS (Vi + Vj)
+    upwind_V_pair(dev_um, dev_vm, dev_p, dev_t, dev_rv);
 }
