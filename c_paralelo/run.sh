@@ -20,10 +20,6 @@ nvcc -arch=sm_86 -O2 -std=c++11 -I. -diag-suppress 1650\
   solve_U.cu \
   solve_V.cu \
   solve_Z.cu \
-  upwind_Vj.cu \
-  upwind_Vi.cu \
-  upwind_Ui.cu \
-  upwind_Uj.cu \
   upwind_U_pair.cu \
   upwind_V_pair.cu \
   transient.c \

@@ -12,12 +12,11 @@ __global__ void calc_upwind_U_pair(
     int thread_id = blockIdx.x * blockDim.x + threadIdx.x + 2;
     int i, j;
     
-    // Determinar coordenadas baseado no modo
-    if (mode == 0) {         // Ui: varia i, j fixo
+    if (mode == 0) {         
         i = thread_id;
         j = fixed_index;
         if (i > imax) return;
-    } else {                 // Uj: i fixo, varia j  
+    } else {                
         i = fixed_index;
         j = thread_id;
         if (j > jmax-1) return;
@@ -25,18 +24,15 @@ __global__ void calc_upwind_U_pair(
     
     int idx = i*(jmax+1)+j;
     
-    // OTIMIZAÇÃO: Variáveis locais (mesmo padrão resc.cu)
     double epsilon_idx = dev_epsilon1[idx];
     double aux = epsilon_idx/re;
     double inv_epsilon = 1.0 / epsilon_idx;
     
-    // Pre-calcular arrays
     double areau_e_j = dev_areau_e[j];
     double areau_w_j = dev_areau_w[j];
     double areau_n_i = dev_areau_n[i];
     double areau_s_i = dev_areau_s[i];
     
-    // Pre-calcular coordenadas  
     double xm_ip1 = dev_xm[i+1];
     double xm_i = dev_xm[i];
     double xm_im1 = dev_xm[i-1];
@@ -48,7 +44,6 @@ __global__ void calc_upwind_U_pair(
     double ym_jp1 = dev_ym[j+1];
     double ym_j = dev_ym[j];
     
-    // Calcular fluxos com otimização
     double fn = 0.5 * (dev_vm[i*(jmax+2)+(j+1)] + dev_vm[(i-1)*(jmax+2)+(j+1)]) * areau_n_i * inv_epsilon;
     double fs = 0.5 * (dev_vm[i*(jmax+2)+j] + dev_vm[(i-1)*(jmax+2)+j]) * areau_s_i * inv_epsilon;
     double fe = 0.5 * (dev_um[(i+1)*(jmax+1)+j] + dev_um[idx]) * areau_e_j * inv_epsilon;
@@ -56,7 +51,6 @@ __global__ void calc_upwind_U_pair(
     
     double df = fe - fw + fn - fs;
     
-    // Pre-calcular diferenças
     double dy_n = y_jp1 - y_j;
     double dy_s = y_j - y_jm1;
     double dx_e = xm_ip1 - xm_i;
@@ -67,14 +61,12 @@ __global__ void calc_upwind_U_pair(
     double de = aux * areau_e_j / dx_e;
     double dw = aux * areau_w_j / dx_w;
     
-    // Upwind scheme
     double aw = dw + fmax(fw, 0.0);
     double as = ds + fmax(fs, 0.0);
     double ae = de + fmax(0.0, -fe);
     double an = dn + fmax(0.0, -fn);
     double ap = aw + ae + as + an + df;
     
-    // Carregar velocidades
     double u_w = dev_um[(i-1)*(jmax+1)+j];
     double u_e = dev_um[(i+1)*(jmax+1)+j];
     double u_s = dev_um[i*(jmax+1)+(j-1)];
@@ -82,7 +74,6 @@ __global__ void calc_upwind_U_pair(
     double u_p = dev_um[idx];
     double v_p = dev_vm[i*(jmax+2)+j];
     
-    // Gradientes otimizados
     double dudxdx = areau_e_j * (u_e - u_p) / dx_e - areau_w_j * (u_p - u_w) / dx_w;
     
     double dy_ym = ym_jp1 - ym_j;
@@ -93,7 +84,6 @@ __global__ void calc_upwind_U_pair(
     
     double dxdvdy = areau_e_j * (vm_n - vm_s) / dy_ym - areau_w_j * (vm_nw - vm_sw) / dy_ym;
     
-    // Termos finais otimizados
     double dx_main = x_i - x_im1;
     double dy_main = y_j - y_jm1;
     double q_art = epsilon_idx * (dev_p[idx] - dev_p[(i-1)*(jmax+1)+j]) / dx_main - b_art * (dudxdx + dxdvdy);
@@ -108,7 +98,6 @@ __global__ void calc_upwind_U_pair(
             - q_art - porous_drag - g * epsilon_idx;
 }
 
-// Função para chamar a fusão U
 void upwind_U_pair(double *dev_um, double *dev_vm, double *dev_p, double *dev_ru) {
     int threads = 256;
     
