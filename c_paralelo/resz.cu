@@ -1,6 +1,4 @@
 #include "comum.h"
-#define idx i*(jmax+1)+j
-
 
 //--- ResZ ---
 __global__ void calc_resz(
@@ -10,8 +8,10 @@ __global__ void calc_resz(
 
     int i = blockIdx.x * blockDim.x + threadIdx.x + 2;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 2;
+    int idx = i*(jmax+1)+j;
     double de, dw, dn, ds, dp;
     double dzudx = 0.0, dzvdy = 0.0;
+    double aux = 1.0/pe;
 
     if(i <= imax-1 && j <= jmax-1){
         dzudx = 0.5 * (dev_z[(i+1)*(jmax+1)+j]+dev_z[idx]) * dev_um_n[(i+1)*(jmax+1)+j] * dev_areau_e[j]
@@ -19,10 +19,10 @@ __global__ void calc_resz(
         dzvdy = 0.5 * (dev_z[i*(jmax+1)+(j+1)]+dev_z[idx]) * dev_vm_n[i*(jmax+2)+(j+1)] * dev_areav_n[i]
                     - 0.5 * (dev_z[i*(jmax+1)+(j-1)]+dev_z[idx]) * dev_vm_n[i*(jmax+2)+j] * dev_areav_s[i];
 
-        de = (dev_ym[j+1]-dev_ym[j]) * (1.0/pe) / (dev_x[i+1]-dev_x[i]);  
-        dw = (dev_ym[j+1]-dev_ym[j]) * (1.0/pe) / (dev_x[i]-dev_x[i-1]); 
-        dn = (dev_xm[i+1]-dev_xm[i]) * (1.0/pe) / (dev_y[j+1]-dev_y[j]);  
-        ds = (dev_xm[i+1]-dev_xm[i]) * (1.0/pe) / (dev_y[j]-dev_y[j-1]);  
+        de = (dev_ym[j+1]-dev_ym[j]) * aux / (dev_x[i+1]-dev_x[i]);  
+        dw = (dev_ym[j+1]-dev_ym[j]) * aux / (dev_x[i]-dev_x[i-1]); 
+        dn = (dev_xm[i+1]-dev_xm[i]) * aux / (dev_y[j+1]-dev_y[j]);  
+        ds = (dev_xm[i+1]-dev_xm[i]) * aux / (dev_y[j]-dev_y[j-1]);  
         dp = de + dw + dn + ds;
 
         dev_rz[idx] = 1.0 / (dev_xm[i+1]-dev_xm[i]) / (dev_ym[j+1]-dev_ym[j]) 

@@ -1,5 +1,4 @@
 #include "comum.h"
-#define idx i*(jmax+1)+j
 
 __global__ void calc_resv(
 	double *dev_areav_e, double *dev_areav_n, double *dev_areav_s, double *dev_areav_w, double *dev_epsilon1, double *dev_y, double *dev_x,
@@ -8,6 +7,7 @@ __global__ void calc_resv(
 
     int i = blockIdx.x * blockDim.x + threadIdx.x + 3;
     int j = blockIdx.y * blockDim.y + threadIdx.y + 3;
+    int idx = i*(jmax+1)+j;
     double df, dn, ds, de, dw;
     double fn, fs, fe, fw;
     double afw, afe, afn, afs;
@@ -17,6 +17,7 @@ __global__ void calc_resv(
     double v_ww, v_ee, v_nn, v_ss;
     double dydudx, dvdydy;
     double q_art, artdivv;
+    double aux = dev_epsilon1[idx]/re;
 
     if(i <= imax-2 && j <= jmax-1){
         fn = 0.5 * (dev_vm[i*(jmax+2)+j]+dev_vm[i*(jmax+2)+(j+1)]) * dev_areav_n[i] / dev_epsilon1[idx];
@@ -25,10 +26,10 @@ __global__ void calc_resv(
         fw = 0.5 * (dev_um[idx]+dev_um[i*(jmax+1)+(j-1)]) * dev_areav_w[j] / dev_epsilon1[idx];
 
         df = fe - fw + fn - fs;
-        dn = (dev_epsilon1[idx]/re) * dev_areav_n[i] / (dev_ym[j+1]-dev_ym[j]);
-        ds = (dev_epsilon1[idx]/re) * dev_areav_s[i] / (dev_ym[j]-dev_ym[j-1]);
-        de = (dev_epsilon1[idx]/re) * dev_areav_e[j] / (dev_x[i+1]-dev_x[i]);
-        dw = (dev_epsilon1[idx]/re) * dev_areav_w[j] / (dev_x[i]-dev_x[i-1]);
+        dn = aux * dev_areav_n[i] / (dev_ym[j+1]-dev_ym[j]);
+        ds = aux * dev_areav_s[i] / (dev_ym[j]-dev_ym[j-1]);
+        de = aux * dev_areav_e[j] / (dev_x[i+1]-dev_x[i]);
+        dw = aux * dev_areav_w[j] / (dev_x[i]-dev_x[i-1]);
 
         //quick
         afw = (double)(fw > 0.0);

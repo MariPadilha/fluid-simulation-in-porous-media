@@ -1,7 +1,5 @@
 #include "comum.h"
-#define idx i*(jmax+1)+j
 
-///fazer funcao device max
 //--- upwind_V ---
 __global__ void calc_upwind_Vi(double *dev_vm, double *dev_um, double *dev_areav_n, 
     double *dev_areav_s, double *dev_areav_e, double *dev_areav_w, double *dev_epsilon1,
@@ -10,12 +8,14 @@ __global__ void calc_upwind_Vi(double *dev_vm, double *dev_um, double *dev_areav
     int j, double b_art, double invfr2, double darcy_number, double cf){
 
     int i = blockIdx.x * blockDim.x + threadIdx.x + 2;
+    int idx = i*(jmax+1)+j;
     double df, dn, ds, de, dw;
     double fn, fs, fe, fw;
     double aw, ae, as, an, ap;
     double v_w, v_e, v_s, v_n, v_p, u_p;
     double dvdydy, dydudx;
     double q_art;  
+    double aux = dev_epsilon1[idx]/re;
 
     if(i <= imax-1){
         fn = 0.5 * (dev_vm[i*(jmax+2)+j]+dev_vm[i*(jmax+2)+(j+1)]) * dev_areav_n[i] / dev_epsilon1[idx]; 
@@ -23,10 +23,10 @@ __global__ void calc_upwind_Vi(double *dev_vm, double *dev_um, double *dev_areav
         fe = 0.5 * (dev_um[(i+1)*(jmax+1)+j]+dev_um[(i+1)*(jmax+1)+(j-1)]) * dev_areav_e[j] / dev_epsilon1[idx];  
         fw = 0.5 * (dev_um[idx] + dev_um[i*(jmax+1)+(j-1)]) * dev_areav_w[j] / dev_epsilon1[idx];
         df = fe - fw + fn - fs;
-        dn = (dev_epsilon1[idx]/re) * dev_areav_n[i] / (dev_ym[j+1]-dev_ym[j]);
-        ds = (dev_epsilon1[idx]/re) * dev_areav_s[i] / (dev_ym[j]-dev_ym[j-1]);
-        de = (dev_epsilon1[idx]/re) * dev_areav_e[j] / (dev_x[i+1]-dev_x[i]);
-        dw = (dev_epsilon1[idx]/re) * dev_areav_w[j] / (dev_x[i]-dev_x[i-1]);
+        dn = aux * dev_areav_n[i] / (dev_ym[j+1]-dev_ym[j]);
+        ds = aux * dev_areav_s[i] / (dev_ym[j]-dev_ym[j-1]);
+        de = aux * dev_areav_e[j] / (dev_x[i+1]-dev_x[i]);
+        dw = aux * dev_areav_w[j] / (dev_x[i]-dev_x[i-1]);
 
         //upwind
         aw = dw + fmax(fw, 0.0);

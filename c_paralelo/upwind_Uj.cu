@@ -1,5 +1,4 @@
 #include "comum.h"
-#define idx i*(jmax+1)+j
 
 //--- upwind_U ---
 __global__ void calc_upwind_Uj(double *dev_vm, double *dev_um, double *dev_areau_n, 
@@ -9,12 +8,14 @@ __global__ void calc_upwind_Uj(double *dev_vm, double *dev_um, double *dev_areau
     int i, double b_art, double darcy_number, double cf, double g){
 
     int j = blockIdx.x * blockDim.x + threadIdx.x + 2;  
+    int idx = i*(jmax+1)+j;
     double df, dn, ds, de, dw;
     double fn, fs, fe, fw;
     double aw, ae, as, an, ap;
     double u_w, u_e, u_s, u_n, u_p, v_p;
     double dudxdx, dxdvdy;
     double q_art;
+    double aux = dev_epsilon1[idx]/re;
     
     if(j <= jmax-1){
         //compute x-direction velocity component un
@@ -24,10 +25,10 @@ __global__ void calc_upwind_Uj(double *dev_vm, double *dev_um, double *dev_areau
         fw = 0.5 * (dev_um[idx]+dev_um[(i-1)*(jmax+1)+j]) * dev_areau_w[j] / dev_epsilon1[idx];
 
         df = fe - fw + fn - fs;
-        dn = (dev_epsilon1[idx]/re) * dev_areau_n[i] / (dev_y[j+1]-dev_y[j]);
-        ds = (dev_epsilon1[idx]/re) * dev_areau_s[i] / (dev_y[j]-dev_y[j-1]);
-        de = (dev_epsilon1[idx]/re) * dev_areau_e[j] / (dev_xm[i+1]-dev_xm[i]);
-        dw = (dev_epsilon1[idx]/re) * dev_areau_w[j] / (dev_xm[i]-dev_xm[i-1]);
+        dn = aux * dev_areau_n[i] / (dev_y[j+1]-dev_y[j]);
+        ds = aux * dev_areau_s[i] / (dev_y[j]-dev_y[j-1]);
+        de = aux * dev_areau_e[j] / (dev_xm[i+1]-dev_xm[i]);
+        dw = aux * dev_areau_w[j] / (dev_xm[i]-dev_xm[i-1]);
 
         //upwind
         aw = dw + fmax(fw, 0.0);
