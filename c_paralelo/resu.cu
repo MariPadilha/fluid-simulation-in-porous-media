@@ -17,18 +17,44 @@ __global__ void calc_resu(
 	double u_ww, u_ee, u_ss, u_nn;
 	double dudxdx, dxdvdy;
 	double artdivu, q_art;
-	double aux = dev_epsilon1[idx]/re;
+	
+	// OTIMIZAÇÃO: Pre-calcular valores locais (registros ao invés de memória global)
+	double epsilon_idx = dev_epsilon1[idx];
+	double aux = epsilon_idx/re;
+	double areau_e_j = dev_areau_e[j];
+	double areau_w_j = dev_areau_w[j]; 
+	double areau_n_i = dev_areau_n[i];
+	double areau_s_i = dev_areau_s[i];
+	double xm_ip1 = dev_xm[i+1];
+	double xm_i = dev_xm[i];
+	double xm_im1 = dev_xm[i-1];
+	double y_jp1 = dev_y[j+1];
+	double y_j = dev_y[j];
+	double y_jm1 = dev_y[j-1];
+	double x_i = dev_x[i];
+	double x_im1 = dev_x[i-1];
+	double ym_jp1 = dev_ym[j+1];
+	double ym_j = dev_ym[j];
 	
 	if(i <= imax-1 && j <= jmax-2){
-		fn = 0.5 * (dev_vm[i*(jmax+2)+(j+1)] + dev_vm[(i-1)*(jmax+2)+(j+1)]) * dev_areau_n[i] / dev_epsilon1[idx];
-		fs = 0.5 * (dev_vm[i*(jmax+2)+j] + dev_vm[(i-1)*(jmax+2)+j]) * dev_areau_s[i] / dev_epsilon1[idx];
-		fe = 0.5 * (dev_um[(i+1)*(jmax+1)+j] + dev_um[idx]) * dev_areau_e[j] / dev_epsilon1[idx];
-		fw = 0.5 * (dev_um[idx] + dev_um[(i-1)*(jmax+1)+j]) * dev_areau_w[j] / dev_epsilon1[idx];
+		// OTIMIZAÇÃO: Usar variáveis locais para evitar acessos repetidos à memória global
+		double inv_epsilon = 1.0 / epsilon_idx;
+		fn = 0.5 * (dev_vm[i*(jmax+2)+(j+1)] + dev_vm[(i-1)*(jmax+2)+(j+1)]) * areau_n_i * inv_epsilon;
+		fs = 0.5 * (dev_vm[i*(jmax+2)+j] + dev_vm[(i-1)*(jmax+2)+j]) * areau_s_i * inv_epsilon;
+		fe = 0.5 * (dev_um[(i+1)*(jmax+1)+j] + dev_um[idx]) * areau_e_j * inv_epsilon;
+		fw = 0.5 * (dev_um[idx] + dev_um[(i-1)*(jmax+1)+j]) * areau_w_j * inv_epsilon;
 		df = fe - fw + fn - fs;
-		dn = aux * dev_areau_n[i] / (dev_y[j+1] - dev_y[j]);
-		ds = aux * dev_areau_s[i] / (dev_y[j] - dev_y[j-1]);
-		de = aux * dev_areau_e[j] / (dev_xm[i+1] - dev_xm[i]);
-		dw = aux * dev_areau_w[j] / (dev_xm[i] - dev_xm[i-1]);
+		
+		// OTIMIZAÇÃO: Pre-calcular diferenças de coordenadas
+		double dy_n = y_jp1 - y_j;
+		double dy_s = y_j - y_jm1;
+		double dx_e = xm_ip1 - xm_i;
+		double dx_w = xm_i - xm_im1;
+		
+		dn = aux * areau_n_i / dy_n;
+		ds = aux * areau_s_i / dy_s;
+		de = aux * areau_e_j / dx_e;
+		dw = aux * areau_w_j / dx_w;
 
         //quick
 		afw = (double)(fw > 0.0);
@@ -70,26 +96,38 @@ __global__ void calc_resu(
 		u_p  = dev_um[idx];
 		v_p  = dev_vm[i*(jmax+2)+j];
 
-		dudxdx = dev_areau_e[j] * (u_e - u_p) / (dev_xm[i+1] - dev_xm[i])
-					-  dev_areau_w[j] * (u_p - u_w) / (dev_xm[i] - dev_xm[i-1]);
+		// OTIMIZAÇÃO: Usar variáveis locais pre-calculadas
+		dudxdx = areau_e_j * (u_e - u_p) / dx_e - areau_w_j * (u_p - u_w) / dx_w;
 	
-		dxdvdy = dev_areau_e[j] * (dev_vm[i*(jmax+2)+(j+1)] - dev_vm[i*(jmax+2)+j]) / (dev_ym[j+1] - dev_ym[j])
-					-  dev_areau_w[j] * (dev_vm[(i-1)*(jmax+2)+(j+1)] - dev_vm[(i-1)*(jmax+2)+j]) / (dev_ym[j+1] - dev_ym[j]);
+		// OTIMIZAÇÃO: Pre-calcular diferenças ym e carregar vm uma vez
+		double dy_ym = ym_jp1 - ym_j;
+		double vm_n = dev_vm[i*(jmax+2)+(j+1)];
+		double vm_s = dev_vm[i*(jmax+2)+j];
+		double vm_nw = dev_vm[(i-1)*(jmax+2)+(j+1)];
+		double vm_sw = dev_vm[(i-1)*(jmax+2)+j];
+		
+		dxdvdy = areau_e_j * (vm_n - vm_s) / dy_ym - areau_w_j * (vm_nw - vm_sw) / dy_ym;
 
 		artdivu = -b_art * (dudxdx + dxdvdy);
 
 		//bulk artificial viscosity term from Ramshaw(1990)
-		q_art = dev_epsilon1[idx] * (dev_p[idx] - dev_p[(i-1)*(jmax+1)+j]) / (dev_x[i] - dev_x[i-1]) + artdivu;
+		double dx_main = x_i - x_im1;
+		double dy_main = y_j - y_jm1;
+		q_art = epsilon_idx * (dev_p[idx] - dev_p[(i-1)*(jmax+1)+j]) / dx_main + artdivu;
 
-		dev_ru[idx] = 1.0 / (dev_x[i]-dev_x[i-1]) / (dev_y[j] - dev_y[j-1]) * (-ap * u_p
+		// OTIMIZAÇÃO: Pre-calcular termos constantes para evitar cálculos repetidos
+		double inv_vol = 1.0 / (dx_main * dy_main);
+		double velocidade_mag = sqrt(u_p*u_p + v_p*v_p);
+		double darcy_term = u_p / (re * darcy_number);
+		double forchheimer_coef = cf / sqrt(epsilon_idx * darcy_number);
+		double porous_drag = epsilon_idx * (darcy_term + forchheimer_coef * u_p * velocidade_mag) * dev_liga_poros[idx];
+		
+		dev_ru[idx] = inv_vol * (-ap * u_p
 				+  aww * u_ww + aw * u_w
 				+  aee * u_ee + ae * u_e
 				+  ass * u_ss + as * u_s
 				+  ann * u_nn + an * u_n)
-				-  q_art - dev_epsilon1[idx] * (u_p / (re * darcy_number)
-				+  cf / (pow((dev_epsilon1[idx] * darcy_number),0.5)) * u_p
-				*  (pow((pow(u_p,2.0) + pow(v_p,2.0)), 0.5))) * dev_liga_poros[idx]
-				-  g * dev_epsilon1[idx];
+				-  q_art - porous_drag - g * epsilon_idx;
     }
 }
 

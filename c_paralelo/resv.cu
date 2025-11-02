@@ -17,19 +17,45 @@ __global__ void calc_resv(
     double v_ww, v_ee, v_nn, v_ss;
     double dydudx, dvdydy;
     double q_art, artdivv;
-    double aux = dev_epsilon1[idx]/re;
+    
+    // OTIMIZAÇÃO: Pre-calcular valores locais (registros ao invés de memória global)
+    double epsilon_idx = dev_epsilon1[idx];
+    double aux = epsilon_idx/re;
+    double areav_e_j = dev_areav_e[j];
+    double areav_w_j = dev_areav_w[j]; 
+    double areav_n_i = dev_areav_n[i];
+    double areav_s_i = dev_areav_s[i];
+    double xm_ip1 = dev_xm[i+1];
+    double xm_i = dev_xm[i];
+    double xm_im1 = dev_xm[i-1];
+    double ym_jp1 = dev_ym[j+1];
+    double ym_j = dev_ym[j];
+    double ym_jm1 = dev_ym[j-1];
+    double y_j = dev_y[j];
+    double y_jm1 = dev_y[j-1];
+    double x_i = dev_x[i];
+    double x_im1 = dev_x[i-1];
 
     if(i <= imax-2 && j <= jmax-1){
-        fn = 0.5 * (dev_vm[i*(jmax+2)+j]+dev_vm[i*(jmax+2)+(j+1)]) * dev_areav_n[i] / dev_epsilon1[idx];
-        fs = 0.5 * (dev_vm[i*(jmax+2)+j]+dev_vm[i*(jmax+2)+(j-1)]) * dev_areav_s[i] / dev_epsilon1[idx];
-        fe = 0.5 * (dev_um[(i+1)*(jmax+1)+j]+dev_um[(i+1)*(jmax+1)+(j-1)]) * dev_areav_e[j] / dev_epsilon1[idx];
-        fw = 0.5 * (dev_um[idx]+dev_um[i*(jmax+1)+(j-1)]) * dev_areav_w[j] / dev_epsilon1[idx];
+        // OTIMIZAÇÃO: Usar variáveis locais para evitar acessos repetidos à memória global
+        double inv_epsilon = 1.0 / epsilon_idx;
+        fn = 0.5 * (dev_vm[i*(jmax+2)+j]+dev_vm[i*(jmax+2)+(j+1)]) * areav_n_i * inv_epsilon;
+        fs = 0.5 * (dev_vm[i*(jmax+2)+j]+dev_vm[i*(jmax+2)+(j-1)]) * areav_s_i * inv_epsilon;
+        fe = 0.5 * (dev_um[(i+1)*(jmax+1)+j]+dev_um[(i+1)*(jmax+1)+(j-1)]) * areav_e_j * inv_epsilon;
+        fw = 0.5 * (dev_um[idx]+dev_um[i*(jmax+1)+(j-1)]) * areav_w_j * inv_epsilon;
 
         df = fe - fw + fn - fs;
-        dn = aux * dev_areav_n[i] / (dev_ym[j+1]-dev_ym[j]);
-        ds = aux * dev_areav_s[i] / (dev_ym[j]-dev_ym[j-1]);
-        de = aux * dev_areav_e[j] / (dev_x[i+1]-dev_x[i]);
-        dw = aux * dev_areav_w[j] / (dev_x[i]-dev_x[i-1]);
+        
+        // OTIMIZAÇÃO: Pre-calcular diferenças de coordenadas
+        double dy_n = ym_jp1 - ym_j;
+        double dy_s = ym_j - ym_jm1;
+        double dx_e = dev_x[i+1] - x_i;
+        double dx_w = x_i - x_im1;
+        
+        dn = aux * areav_n_i / dy_n;
+        ds = aux * areav_s_i / dy_s;
+        de = aux * areav_e_j / dx_e;
+        dw = aux * areav_w_j / dx_w;
 
         //quick
         afw = (double)(fw > 0.0);
@@ -73,25 +99,36 @@ __global__ void calc_resv(
         v_p  = dev_vm[i*(jmax+2)+j];
         u_p  = dev_um[idx];
 
-        dvdydy = dev_areav_n[i] * (v_n-v_p) / (dev_ym[j+1]-dev_ym[j])
-                    -  dev_areav_s[i] * (v_p-v_s) / (dev_ym[j]-dev_ym[j-1]);
+        // OTIMIZAÇÃO: Usar variáveis locais pre-calculadas
+        dvdydy = areav_n_i * (v_n-v_p) / dy_n - areav_s_i * (v_p-v_s) / dy_s;
 
-        dydudx = dev_areav_n[i] * (dev_um[(i+1)*(jmax+1)+j]-dev_um[idx]) / (dev_xm[i+1]-dev_xm[i])
-                    -  dev_areav_s[i] * (dev_um[(i+1)*(jmax+1)+(j-1)]-dev_um[i*(jmax+1)+(j-1)]) / (dev_xm[i+1]-dev_xm[i]);
+        // OTIMIZAÇÃO: Pre-calcular diferenças xm e carregar um uma vez
+        double dx_xm = xm_ip1 - xm_i;
+        double um_e = dev_um[(i+1)*(jmax+1)+j];
+        double um_es = dev_um[(i+1)*(jmax+1)+(j-1)];
+        double um_ws = dev_um[i*(jmax+1)+(j-1)];
+        
+        dydudx = areav_n_i * (um_e - u_p) / dx_xm - areav_s_i * (um_es - um_ws) / dx_xm;
 
         artdivv = -(b_art) * (dydudx+dvdydy);
 
         //bulk artificial viscosity term from Ramshaw(1990)
-        q_art = dev_epsilon1[idx] * (dev_p[idx]-dev_p[i*(jmax+1)+(j-1)]) / (dev_y[j]-dev_y[j-1]) + artdivv;
+        double dy_main = y_j - y_jm1;
+        double dx_main = x_i - x_im1;
+        q_art = epsilon_idx * (dev_p[idx]-dev_p[i*(jmax+1)+(j-1)]) / dy_main + artdivv;
 
-        dev_rv[i*(jmax+2)+j] = 1.0 / (dev_x[i]-dev_x[i-1]) / (dev_y[j]-dev_y[j-1]) 
-                * (-ap * v_p + aww * v_ww + aw * v_w + aee * v_ee + ae * v_e
-                + ass * v_ss + as * v_s
-                + ann * v_nn + an * v_n) 
-                - q_art + invfr2 * (1.0 - 1.0 / ((dev_t[idx]+dev_t[i*(jmax+1)+(j-1)]) * 0.5))
-                - dev_epsilon1[idx]*(v_p/(re*darcy_number) 
-                + cf/(pow((dev_epsilon1[idx]*darcy_number), 0.5)) * v_p 
-                * (pow((pow(u_p, 2.0) + pow(v_p, 2.0)), 0.5))) * dev_liga_poros[idx]; 
+        // OTIMIZAÇÃO: Pre-calcular termos constantes para evitar cálculos repetidos
+        double inv_vol = 1.0 / (dx_main * dy_main);
+        double velocidade_mag = sqrt(u_p*u_p + v_p*v_p);
+        double darcy_term = v_p / (re * darcy_number);
+        double forchheimer_coef = cf / sqrt(epsilon_idx * darcy_number);
+        double porous_drag = epsilon_idx * (darcy_term + forchheimer_coef * v_p * velocidade_mag) * dev_liga_poros[idx];
+        double temp_avg = (dev_t[idx] + dev_t[i*(jmax+1)+(j-1)]) * 0.5;
+        double buoyancy_term = invfr2 * (1.0 - 1.0 / temp_avg);
+
+        dev_rv[i*(jmax+2)+j] = inv_vol * (-ap * v_p + aww * v_ww + aw * v_w + aee * v_ee + ae * v_e
+                + ass * v_ss + as * v_s + ann * v_nn + an * v_n) 
+                - q_art + buoyancy_term - porous_drag; 
     }
 }
 
