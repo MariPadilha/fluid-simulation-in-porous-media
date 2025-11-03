@@ -30,12 +30,10 @@ static __global__ void calc_3(double *dev_res_z, double *dev_zi, double *dev_z, 
 }
 
 //--- Solve Mixture Fraction ---
-void solve_Z(double *dev_um_n, double *dev_vm_n, double *dev_z, double *dev_z_n_tau, double *dev_z_tau){
-    double *dev_rz;
+void solve_Z(double *dev_um_n, double *dev_vm_n, double *dev_z, double *dev_z_n_tau, double *dev_z_tau, double *dev_rz){
     dim3 blockDim(16,16);
     dim3 gridDim((imax-3 + blockDim.x - 1)/blockDim.x, (jmax-3 + blockDim.y - 1)/blockDim.y);
 
-    cudaMalloc((void**)&dev_rz, sizeof(double)*(imax+1)*(jmax+1));
 
     // RALSTON'S METHOD (Second Order Runge-Kutta)
     RESZ(dev_um_n, dev_vm_n, dev_z_tau, dev_rz);
@@ -53,6 +51,4 @@ void solve_Z(double *dev_um_n, double *dev_vm_n, double *dev_z, double *dev_z_n_
     calc_3<<<gridDim, blockDim>>>(dev_res_z, dev_zi, dev_z, dev_z_tau, dev_z_n_tau, dev_rz, jmax, imax, dt, dtau);
 
     bcZ(dev_z_n_tau);
-
-    cudaFree(dev_rz);
 }

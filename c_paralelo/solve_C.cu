@@ -31,13 +31,10 @@ static __global__ void calc_3(double *dev_res_c, double *dev_ci, double *dev_c, 
 }
 
 //--- solve_C - concentration ---
-void solve_C(double *dev_um_n, double *dev_vm_n, double *dev_c, double *dev_c_n_tau, double *dev_c_tau){
-    double *dev_rc;
+void solve_C(double *dev_um_n, double *dev_vm_n, double *dev_c, double *dev_c_n_tau, double *dev_c_tau, double *dev_rc){
     dim3 blockDim(16,16);
     dim3 gridDim((imax-3 + blockDim.x - 1)/blockDim.x, (jmax-3 + blockDim.y - 1)/blockDim.y);
-
-    cudaMalloc((void**)&dev_rc, sizeof(double)*(imax+1)*(jmax+1));
-
+    
     // RALSTON'S METHOD (Second Order Runge-Kutta)
     RESC(dev_um_n, dev_vm_n, dev_c_tau, dev_rc);
 
@@ -54,6 +51,4 @@ void solve_C(double *dev_um_n, double *dev_vm_n, double *dev_c, double *dev_c_n_
     calc_3<<<gridDim, blockDim>>>(dev_res_c, dev_ci, dev_c, dev_c_tau, dev_c_n_tau, dev_rc, jmax, imax, dtau, dt);
 
     bcC(dev_c_n_tau);
-
-    cudaFree(dev_rc);
 }

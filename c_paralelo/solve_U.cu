@@ -28,14 +28,10 @@ static __global__ void calc_3(double *dev_res_u, double *dev_um, double *dev_um_
     }
 }
 
-double solve_U(double *dev_um, double *dev_vm, double *dev_um_n, double *dev_um_tau, double *dev_vm_tau, double *dev_um_n_tau, double *dev_p){
-    double *dev_ui, *dev_ru, *dev_res_u;
+double solve_U(double *dev_um, double *dev_vm, double *dev_um_n, double *dev_um_tau, double *dev_vm_tau, double *dev_um_n_tau, double *dev_p, double *dev_ui, double *dev_ru, double *dev_res_u){
     dim3 blockDim(16, 16);
     dim3 gridDim((imax-4 + blockDim.x - 1)/blockDim.x, (jmax-3 + blockDim.y - 1)/blockDim.y);
-
-    cudaMalloc((void**)&dev_ru, sizeof(double)*(imax+2)*(jmax+1));
-    cudaMalloc((void**)&dev_ui, sizeof(double)*(imax+2)*(jmax+1));
-    cudaMalloc((void**)&dev_res_u, sizeof(double)*(imax+2)*(jmax+1));
+    
     
     RESU(dev_um_tau, dev_vm_tau, dev_p, dev_ru);
 
@@ -61,9 +57,5 @@ double solve_U(double *dev_um, double *dev_vm, double *dev_um_n, double *dev_um_
     
     double residual_u =  max_reduce(dev_res_u, imax-1, jmax-2); 
     
-    cudaFree(dev_ru);
-    cudaFree(dev_ui);
-    cudaFree(dev_res_u);
-
     return residual_u;
 }

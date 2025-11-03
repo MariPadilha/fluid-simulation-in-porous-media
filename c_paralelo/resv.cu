@@ -18,7 +18,6 @@ __global__ void calc_resv(
     double dydudx, dvdydy;
     double q_art, artdivv;
     
-    // OTIMIZAÇÃO: Pre-calcular valores locais (registros ao invés de memória global)
     double epsilon_idx = dev_epsilon1[idx];
     double aux = epsilon_idx/re;
     double areav_e_j = dev_areav_e[j];
@@ -37,7 +36,6 @@ __global__ void calc_resv(
     double x_im1 = dev_x[i-1];
 
     if(i <= imax-2 && j <= jmax-1){
-        // OTIMIZAÇÃO: Usar variáveis locais para evitar acessos repetidos à memória global
         double inv_epsilon = 1.0 / epsilon_idx;
         fn = 0.5 * (dev_vm[i*(jmax+2)+j]+dev_vm[i*(jmax+2)+(j+1)]) * areav_n_i * inv_epsilon;
         fs = 0.5 * (dev_vm[i*(jmax+2)+j]+dev_vm[i*(jmax+2)+(j-1)]) * areav_s_i * inv_epsilon;
@@ -46,7 +44,6 @@ __global__ void calc_resv(
 
         df = fe - fw + fn - fs;
         
-        // OTIMIZAÇÃO: Pre-calcular diferenças de coordenadas
         double dy_n = ym_jp1 - ym_j;
         double dy_s = ym_j - ym_jm1;
         double dx_e = dev_x[i+1] - x_i;
@@ -99,10 +96,8 @@ __global__ void calc_resv(
         v_p  = dev_vm[i*(jmax+2)+j];
         u_p  = dev_um[idx];
 
-        // OTIMIZAÇÃO: Usar variáveis locais pre-calculadas
         dvdydy = areav_n_i * (v_n-v_p) / dy_n - areav_s_i * (v_p-v_s) / dy_s;
 
-        // OTIMIZAÇÃO: Pre-calcular diferenças xm e carregar um uma vez
         double dx_xm = xm_ip1 - xm_i;
         double um_e = dev_um[(i+1)*(jmax+1)+j];
         double um_es = dev_um[(i+1)*(jmax+1)+(j-1)];
@@ -117,7 +112,6 @@ __global__ void calc_resv(
         double dx_main = x_i - x_im1;
         q_art = epsilon_idx * (dev_p[idx]-dev_p[i*(jmax+1)+(j-1)]) / dy_main + artdivv;
 
-        // OTIMIZAÇÃO: Pre-calcular termos constantes para evitar cálculos repetidos
         double inv_vol = 1.0 / (dx_main * dy_main);
         double velocidade_mag = sqrt(u_p*u_p + v_p*v_p);
         double darcy_term = v_p / (re * darcy_number);
@@ -143,6 +137,5 @@ void RESV(double *dev_um, double *dev_vm, double *dev_p, double *dev_t, double *
     cf, invfr2, dev_um, dev_vm, dev_p, dev_t, dev_rv);
 
 
-    // Convective terms upwind scheme - FUSED KERNELS (Vi + Vj)
     upwind_V_pair(dev_um, dev_vm, dev_p, dev_t, dev_rv);
 }

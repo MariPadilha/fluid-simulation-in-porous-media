@@ -47,10 +47,22 @@ int main(int argc, char *argv[]){
     dim3 gridDim((imax + blockDim.x - 1)/blockDim.x, (jmax + blockDim.y - 1)/blockDim.y);
     dim3 gridDimUm((imax+1 + blockDim.x - 1)/blockDim.x, (jmax + blockDim.y - 1)/blockDim.y);
     dim3 gridDimVm((imax + blockDim.x - 1)/blockDim.x, (jmax+1 + blockDim.y - 1)/blockDim.y);
+    double *dev_rz;
+    double *dev_vi, *dev_rv, *dev_res_v;
+    double *dev_ui, *dev_ru, *dev_res_u;
+    double *dev_rc;
     double *dev_um, *dev_vm;
     double *dev_um_n, *dev_vm_n;
     double *dev_um_tau, *dev_vm_tau;
     double *dev_um_n_tau, *dev_vm_n_tau;
+    cudaMalloc((void**)&dev_rc, sizeof(double)*(imax+1)*(jmax+1));
+    cudaMalloc((void**)&dev_ru, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_ui, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMalloc((void**)&dev_res_u, sizeof(double)*(imax+2)*(jmax+1));
+    cudaMallocManaged((void**)&dev_rv, sizeof(double)*(imax+1)*(jmax+2));
+    cudaMallocManaged((void**)&dev_vi, sizeof(double)*(imax+1)*(jmax+2));
+    cudaMallocManaged((void**)&dev_res_v, sizeof(double)*(imax+1)*(jmax+2));
+    cudaMalloc((void**)&dev_rz, sizeof(double)*(imax+1)*(jmax+1));
     cudaMallocManaged((void**)&dev_um, sizeof(double)*(imax+2)*(jmax+1));
     cudaMallocManaged((void**)&dev_vm, sizeof(double)*(imax+1)*(jmax+2));
     cudaMalloc((void**)&dev_um_n, sizeof(double)*(imax+2)*(jmax+1));
@@ -166,15 +178,15 @@ int main(int argc, char *argv[]){
         //--- Pseudo-time calculation starts ---
         while(itc < iterations.itc_max){
             //--- Solve Momentum Equation with QUICK Scheme ---
-            residual_u = solve_U(dev_um, dev_vm, dev_um_n, dev_um_tau, dev_vm_tau, dev_um_n_tau, dev_pn);
-            residual_v = solve_V(dev_um, dev_vm, dev_vm_n, dev_um_tau, dev_vm_tau, dev_vm_n_tau, dev_pn, dev_t);
+            residual_u = solve_U(dev_um, dev_vm, dev_um_n, dev_um_tau, dev_vm_tau, dev_um_n_tau, dev_pn, dev_ui, dev_ru, dev_res_u);
+            residual_v = solve_V(dev_um, dev_vm, dev_vm_n, dev_um_tau, dev_vm_tau, dev_vm_n_tau, dev_pn, dev_t, dev_vi, dev_rv, dev_res_v);
             
             //--- Solve Continuity Equation ---
             residual_p = solve_P(dev_p, dev_um_n_tau, dev_vm_n_tau, dev_pn);
             
             //--- Solve Energy Equation ---
-            solve_Z(dev_um_n_tau, dev_vm_n_tau, dev_t, dev_t_n_tau, dev_t_tau);
-            solve_C(dev_um_n_tau, dev_vm_n_tau, dev_c, dev_c_n_tau, dev_c_tau);
+            solve_Z(dev_um_n_tau, dev_vm_n_tau, dev_t, dev_t_n_tau, dev_t_tau, dev_rz);
+            solve_C(dev_um_n_tau, dev_vm_n_tau, dev_c, dev_c_n_tau, dev_c_tau, dev_rc);
             /*--- check convergence ---
             CALL convergence(itc, error, residual_p, residual_u, residual_v)
             itc = itc+1
@@ -268,15 +280,23 @@ int main(int argc, char *argv[]){
     cudaFree(dev_vm_n_tau);
     cudaFree(dev_u);
     cudaFree(dev_v);
+    cudaFree(dev_rc);
     cudaFree(dev_p);
     cudaFree(dev_pn);
     cudaFree(dev_h);
     cudaFree(dev_t);
     cudaFree(dev_z);
+    cudaFree(dev_rz);
     cudaFree(dev_c);
     cudaFree(dev_t_n_tau);
     cudaFree(dev_t_tau);
     cudaFree(dev_c_n_tau);
+    cudaFree(dev_rv);
+    cudaFree(dev_ru);
+    cudaFree(dev_ui);
+    cudaFree(dev_res_u);
+    cudaFree(dev_vi);
+    cudaFree(dev_res_v);
     cudaFree(dev_c_tau);
     desalocar_globais();
 }

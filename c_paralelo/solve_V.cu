@@ -28,15 +28,10 @@ __global__ void calc_3(double *dev_res_v, double *dev_vm, double *dev_vm_tau, do
     }
 }
 
-double solve_V(double *dev_um, double *dev_vm, double *dev_vm_n, double *dev_um_tau, double *dev_vm_tau, double *dev_vm_n_tau, double *dev_p, double *dev_t){
-    double *dev_vi, *dev_rv, *dev_res_v;
+double solve_V(double *dev_um, double *dev_vm, double *dev_vm_n, double *dev_um_tau, double *dev_vm_tau, double *dev_vm_n_tau, double *dev_p, double *dev_t, double *dev_vi, double *dev_rv, double *dev_res_v){
     dim3 blockDim(16,16);
     dim3 gridDim((imax-3 + blockDim.x - 1)/blockDim.x, (jmax-4 + blockDim.y - 1)/blockDim.y);
-
-    cudaMallocManaged((void**)&dev_rv, sizeof(double)*(imax+1)*(jmax+2));
-    cudaMallocManaged((void**)&dev_vi, sizeof(double)*(imax+1)*(jmax+2));
-    cudaMallocManaged((void**)&dev_res_v, sizeof(double)*(imax+1)*(jmax+2));
-
+    
     RESV(dev_um_tau, dev_vm_tau, dev_p, dev_t, dev_rv);
 
     calc_1<<<gridDim, blockDim>>>(dev_res_v, dev_vm, dev_vm_tau, dev_rv, dev_vi, jmax, imax, dt, dtau);
@@ -55,10 +50,5 @@ double solve_V(double *dev_um, double *dev_vm, double *dev_vm_n, double *dev_um_
     bcUV(dev_um_tau, dev_vm_n_tau);
 
     double residual_v = max_reduce(dev_res_v, imax-1, jmax); 
-
-    cudaFree(dev_rv);
-    cudaFree(dev_vi);
-    cudaFree(dev_res_v);
-
     return residual_v;
 }
