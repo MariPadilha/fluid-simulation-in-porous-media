@@ -1,0 +1,28 @@
+rm: cannot remove 'data/flametip.dat': No such file or directory
+rm: cannot remove 'data/error.dat': No such file or directory
+./cylinder_solver.out: Interrupt
+
+ Performance counter stats for './cylinder_solver.out':
+
+12,498,485,177,585      cpu_atom/cycles/                                                        (52.11%)
+14,195,593,235,440      cpu_core/cycles/                                                        (49.72%)
+36,955,873,109,386      cpu_atom/instructions/           #    2.96  insn per cycle              (52.11%)
+37,002,800,023,856      cpu_core/instructions/           #    2.61  insn per cycle              (49.72%)
+        80,199,507      cpu_atom/cache-misses/                                                  (52.11%)
+       215,104,542      cpu_core/cache-misses/                                                  (49.72%)
+     5,377,770,745      cpu_atom/branch-misses/                                                 (52.11%)
+     3,005,755,154      cpu_core/branch-misses/                                                 (49.72%)
+ 8,658,137,062,990      cpu_atom/L1-dcache-loads/                                               (52.11%)
+ 8,689,824,552,696      cpu_core/L1-dcache-loads/                                               (49.72%)
+    17,926,628,209      cpu_core/L1-dcache-load-misses/  #    0.21% of all L1-dcache accesses   (49.72%)
+     3,793,340,875      cpu_atom/LLC-loads/                                                     (52.11%)
+     4,818,488,194      cpu_core/LLC-loads/                                                     (49.72%)
+             4,648      cpu_atom/LLC-load-misses/        #    0.00% of all LL-cache accesses    (52.11%)
+        19,713,198      cpu_core/LLC-load-misses/        #    0.41% of all LL-cache accesses    (49.72%)
+
+     154.354336315 seconds time elapsed
+
+    4037.855499000 seconds user
+     613.914389000 seconds sys
+
+

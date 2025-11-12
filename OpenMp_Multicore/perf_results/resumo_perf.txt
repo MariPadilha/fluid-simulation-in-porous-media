@@ -1,0 +1,8 @@
+📊 Iniciando benchmarks com perf
+
+───────────────────────────────────────────────
+Executando com 32 thread(s) - 1 repetições
+───────────────────────────────────────────────
+  → Execução 1 de 1 com 32 threads
+    Tempo real (execução 1): 342.265554537s
+    → Tempo médio: 342.265554s

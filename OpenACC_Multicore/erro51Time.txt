@@ -1,0 +1,49 @@
+rm: cannot remove 'data/flametip.dat': No such file or directory
+rm: cannot remove 'data/error.dat': No such file or directory
+Warning: ieee_inexact is signaling
+FORTRAN STOP
+1631.54user 0.04system 27:11.66elapsed 99%CPU (0avgtext+0avgdata 9600maxresident)k
+0inputs+6976outputs (0major+6951minor)pagefaults 0swaps
+rm: cannot remove 'data/flametip.dat': No such file or directory
+rm: cannot remove 'data/error.dat': No such file or directory
+Warning: ieee_inexact is signaling
+FORTRAN STOP
+1745.57user 33.23system 14:52.36elapsed 199%CPU (0avgtext+0avgdata 9792maxresident)k
+0inputs+6936outputs (0major+36979minor)pagefaults 0swaps
+rm: cannot remove 'data/flametip.dat': No such file or directory
+rm: cannot remove 'data/error.dat': No such file or directory
+Warning: ieee_inexact is signaling
+FORTRAN STOP
+2251.01user 94.24system 9:46.41elapsed 399%CPU (0avgtext+0avgdata 9600maxresident)k
+0inputs+6936outputs (3major+34168minor)pagefaults 0swaps
+rm: cannot remove 'data/flametip.dat': No such file or directory
+rm: cannot remove 'data/error.dat': No such file or directory
+Warning: ieee_inexact is signaling
+FORTRAN STOP
+2671.65user 137.64system 7:48.34elapsed 599%CPU (0avgtext+0avgdata 9408maxresident)k
+0inputs+7000outputs (10major+28802minor)pagefaults 0swaps
+rm: cannot remove 'data/flametip.dat': No such file or directory
+rm: cannot remove 'data/error.dat': No such file or directory
+Warning: ieee_inexact is signaling
+FORTRAN STOP
+3293.15user 199.16system 7:16.67elapsed 799%CPU (0avgtext+0avgdata 9216maxresident)k
+0inputs+7000outputs (5major+18058minor)pagefaults 0swaps
+rm: cannot remove 'data/flametip.dat': No such file or directory
+rm: cannot remove 'data/error.dat': No such file or directory
+Warning: ieee_inexact is signaling
+FORTRAN STOP
+3936.17user 257.30system 6:59.56elapsed 999%CPU (0avgtext+0avgdata 9216maxresident)k
+0inputs+7008outputs (10major+23971minor)pagefaults 0swaps
+rm: cannot remove 'data/flametip.dat': No such file or directory
+rm: cannot remove 'data/error.dat': No such file or directory
+Warning: ieee_inexact is signaling
+FORTRAN STOP
+5298.44user 421.98system 7:57.22elapsed 1198%CPU (0avgtext+0avgdata 9024maxresident)k
+0inputs+6936outputs (9major+20240minor)pagefaults 0swaps
+nohup: ignoring input
+rm: cannot remove 'data/flametip.dat': No such file or directory
+rm: cannot remove 'data/error.dat': No such file or directory
+Warning: ieee_inexact is signaling
+FORTRAN STOP
+11315.74user 1094.21system 9:12.25elapsed 2247%CPU (0avgtext+0avgdata 7680maxresident)k
+24inputs+7000outputs (36major+35514minor)pagefaults 0swaps

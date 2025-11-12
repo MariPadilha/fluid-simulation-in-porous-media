@@ -1,0 +1,26 @@
+./cylinder_solver.out: Interrupt
+
+ Performance counter stats for './cylinder_solver.out':
+
+     <not counted>      cpu_atom/cycles/                                                        (0.00%)
+        31,714,034      cpu_core/cycles/                                                      
+     <not counted>      cpu_atom/instructions/                                                  (0.00%)
+        93,899,872      cpu_core/instructions/           #    2.96  insn per cycle            
+     <not counted>      cpu_atom/cache-misses/                                                  (0.00%)
+           101,434      cpu_core/cache-misses/                                                
+     <not counted>      cpu_atom/branch-misses/                                                 (0.00%)
+            80,188      cpu_core/branch-misses/                                               
+     <not counted>      cpu_atom/L1-dcache-loads/                                               (0.00%)
+        19,764,606      cpu_core/L1-dcache-loads/                                             
+            74,354      cpu_core/L1-dcache-load-misses/  #    0.38% of all L1-dcache accesses 
+     <not counted>      cpu_atom/LLC-loads/                                                     (0.00%)
+            19,580      cpu_core/LLC-loads/                                                   
+     <not counted>      cpu_atom/LLC-load-misses/                                               (0.00%)
+            10,424      cpu_core/LLC-load-misses/        #   53.24% of all LL-cache accesses  
+
+       0.011274940 seconds time elapsed
+
+       0.007821000 seconds user
+       0.002933000 seconds sys
+
+

@@ -1,0 +1,7 @@
+nohup: ignoring input
+rm: cannot remove 'data/flametip.dat': No such file or directory
+rm: cannot remove 'data/error.dat': No such file or directory
+Warning: ieee_inexact is signaling
+FORTRAN STOP
+12807.35user 2.16system 3:33:27elapsed 100%CPU (0avgtext+0avgdata 89980maxresident)k
+6368inputs+108920outputs (27major+23409minor)pagefaults 0swaps

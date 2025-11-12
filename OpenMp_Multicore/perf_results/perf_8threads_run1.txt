@@ -1,0 +1,29 @@
+rm: cannot remove 'data/flametip.dat': No such file or directory
+rm: cannot remove 'data/error.dat': No such file or directory
+Warning: ieee_inexact is signaling
+FORTRAN STOP
+
+ Performance counter stats for './cylinder_solver.out':
+
+35,964,135,520,308      cpu_atom/cycles/                                                        (0.09%)
+44,623,222,569,047      cpu_core/cycles/                                                        (99.92%)
+47,035,854,854,754      cpu_atom/instructions/           #    1.31  insn per cycle              (0.09%)
+127,391,266,832,237      cpu_core/instructions/           #    2.85  insn per cycle              (99.92%)
+     1,412,116,168      cpu_atom/cache-misses/                                                  (0.09%)
+     3,351,460,020      cpu_core/cache-misses/                                                  (99.92%)
+     3,737,292,249      cpu_atom/branch-misses/                                                 (0.09%)
+     8,415,509,280      cpu_core/branch-misses/                                                 (99.92%)
+13,451,606,262,251      cpu_atom/L1-dcache-loads/                                               (0.09%)
+32,933,308,057,769      cpu_core/L1-dcache-loads/                                               (99.92%)
+   569,016,986,359      cpu_core/L1-dcache-load-misses/  #    1.73% of all L1-dcache accesses   (99.92%)
+    16,166,624,961      cpu_atom/LLC-loads/                                                     (0.09%)
+    30,430,399,282      cpu_core/LLC-loads/                                                     (99.92%)
+            97,544      cpu_atom/LLC-load-misses/        #    0.00% of all LL-cache accesses    (0.09%)
+        41,389,227      cpu_core/LLC-load-misses/        #    0.14% of all LL-cache accesses    (99.92%)
+
+    1479.203025100 seconds time elapsed
+
+   11351.264881000 seconds user
+     478.843633000 seconds sys
+
+
