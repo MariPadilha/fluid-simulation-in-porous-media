@@ -1,0 +1,4 @@
+itc_max: 2, nc: 1, n_tr: 10, n_out: 100, n_vort: 100
+beta: 1300.000000, b_art: 0.000000, dtau_f: 1000000.000000, final_time: 1.000000,
+eps: 0.000100, eps_mass: 0.000100, start_mode: 0
+tnu: 3.990000, yf_b: 1.000000, yo_oo: 0.210000, ts: 300.000000, tn_too: 1.000000
