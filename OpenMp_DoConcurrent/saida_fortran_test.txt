@@ -1,0 +1,3 @@
+FIO-F-228/namelist read/unit=550/end of file reached without finding group.
+ File name = 'input/iterations.dat',    formatted, sequential access   record = 12
+ In source file initial.f90, at line number 7

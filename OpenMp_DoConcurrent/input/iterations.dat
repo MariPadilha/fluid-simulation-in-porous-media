@@ -1,0 +1,14 @@
+&iterations
+itc_max = 800000,
+nc = 2,
+n_tr = 10,
+n_out = 10,
+n_vort = 10,
+beta = 1300.0,
+b_art = 0.0,
+dtau_f = 10e+5,
+final_time = 1.0,
+eps = 1e-4,
+eps_mass = 1e-4,
+start_mode = 0
+/
