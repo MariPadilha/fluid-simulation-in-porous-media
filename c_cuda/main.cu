@@ -4,8 +4,9 @@
 //Versteeg, H. K., and W. Malalasekera. 
 //"An introduction to computational Fluid Dynamics, The finite volume control, ed." (1995).
 #include "comum.h"
-#define N_IMAX 10
-#define N_ITC 2
+#include <math.h>
+#define N_IMAX 51*4
+#define N_ITC 800000
 #define idx i*(jmax+1)+j
 
 __global__ void atualizar_matrizes_linearizadas(double *origem, double *destino, int tamanhoLinha, int tamanhoColuna, int inicio, int coluna){
@@ -88,6 +89,33 @@ int main(int argc, char *argv[]){
     cudaMalloc((void**)&dev_c_tau, sizeof(double)*(imax+1)*(jmax+1));
 
     double residual_p, residual_u, residual_v, error;
+
+    //=================================================================
+    // CUDA Events — Instrumentação de tempo (NÃO altera lógica numérica)
+    //=================================================================
+    cudaEvent_t ev_ts_start, ev_ts_stop;          // timestep total
+    cudaEvent_t ev_solveU_start, ev_solveU_stop;  // solve_U
+    cudaEvent_t ev_solveV_start, ev_solveV_stop;  // solve_V
+    cudaEvent_t ev_solveP_start, ev_solveP_stop;  // solve_P
+    cudaEvent_t ev_solveZ_start, ev_solveZ_stop;  // solve_Z
+    cudaEvent_t ev_solveC_start, ev_solveC_stop;  // solve_C
+    cudaEvent_t ev_h2d_start, ev_h2d_stop;        // H2D (prefetch)
+    cudaEvent_t ev_d2h_start, ev_d2h_stop;        // D2H (sync back)
+
+    cudaEventCreate(&ev_ts_start);    cudaEventCreate(&ev_ts_stop);
+    cudaEventCreate(&ev_solveU_start); cudaEventCreate(&ev_solveU_stop);
+    cudaEventCreate(&ev_solveV_start); cudaEventCreate(&ev_solveV_stop);
+    cudaEventCreate(&ev_solveP_start); cudaEventCreate(&ev_solveP_stop);
+    cudaEventCreate(&ev_solveZ_start); cudaEventCreate(&ev_solveZ_stop);
+    cudaEventCreate(&ev_solveC_start); cudaEventCreate(&ev_solveC_stop);
+    cudaEventCreate(&ev_h2d_start);   cudaEventCreate(&ev_h2d_stop);
+    cudaEventCreate(&ev_d2h_start);   cudaEventCreate(&ev_d2h_stop);
+
+    float time_solveU, time_solveV, time_solveP, time_solveZ, time_solveC;
+    float time_h2d, time_d2h, time_timestep;
+    // Acumuladores por timestep (soma das sub-iterações pseudo-tempo)
+    float acc_solveU, acc_solveV, acc_solveP, acc_solveZ, acc_solveC;
+    float acc_h2d, acc_d2h;
 
     //duration = omp_get_wtime()
     /*  character(len=128) :: pwd
@@ -174,19 +202,52 @@ int main(int argc, char *argv[]){
     //--- Physical time step ---
     while(tempo < iterations.final_time){
         tempo = tempo + dt;
+
+        // --- CUDA Events: início do timestep ---
+        cudaEventRecord(ev_ts_start);
+        acc_solveU = 0.0f; acc_solveV = 0.0f; acc_solveP = 0.0f;
+        acc_solveZ = 0.0f; acc_solveC = 0.0f;
+        acc_h2d = 0.0f; acc_d2h = 0.0f;
         
         //--- Pseudo-time calculation starts ---
         while(itc < iterations.itc_max){
             //--- Solve Momentum Equation with QUICK Scheme ---
+            cudaEventRecord(ev_solveU_start);
             residual_u = solve_U(dev_um, dev_vm, dev_um_n, dev_um_tau, dev_vm_tau, dev_um_n_tau, dev_pn, dev_ui, dev_ru, dev_res_u);
+            cudaEventRecord(ev_solveU_stop);
+            cudaEventSynchronize(ev_solveU_stop);
+            cudaEventElapsedTime(&time_solveU, ev_solveU_start, ev_solveU_stop);
+            acc_solveU += time_solveU;
+
+            cudaEventRecord(ev_solveV_start);
             residual_v = solve_V(dev_um, dev_vm, dev_vm_n, dev_um_tau, dev_vm_tau, dev_vm_n_tau, dev_pn, dev_t, dev_vi, dev_rv, dev_res_v);
+            cudaEventRecord(ev_solveV_stop);
+            cudaEventSynchronize(ev_solveV_stop);
+            cudaEventElapsedTime(&time_solveV, ev_solveV_start, ev_solveV_stop);
+            acc_solveV += time_solveV;
             
             //--- Solve Continuity Equation ---
+            cudaEventRecord(ev_solveP_start);
             residual_p = solve_P(dev_p, dev_um_n_tau, dev_vm_n_tau, dev_pn);
+            cudaEventRecord(ev_solveP_stop);
+            cudaEventSynchronize(ev_solveP_stop);
+            cudaEventElapsedTime(&time_solveP, ev_solveP_start, ev_solveP_stop);
+            acc_solveP += time_solveP;
             
             //--- Solve Energy Equation ---
+            cudaEventRecord(ev_solveZ_start);
             solve_Z(dev_um_n_tau, dev_vm_n_tau, dev_t, dev_t_n_tau, dev_t_tau, dev_rz);
+            cudaEventRecord(ev_solveZ_stop);
+            cudaEventSynchronize(ev_solveZ_stop);
+            cudaEventElapsedTime(&time_solveZ, ev_solveZ_start, ev_solveZ_stop);
+            acc_solveZ += time_solveZ;
+
+            cudaEventRecord(ev_solveC_start);
             solve_C(dev_um_n_tau, dev_vm_n_tau, dev_c, dev_c_n_tau, dev_c_tau, dev_rc);
+            cudaEventRecord(ev_solveC_stop);
+            cudaEventSynchronize(ev_solveC_stop);
+            cudaEventElapsedTime(&time_solveC, ev_solveC_start, ev_solveC_stop);
+            acc_solveC += time_solveC;
             /*--- check convergence ---
             CALL convergence(itc, error, residual_p, residual_u, residual_v)
             itc = itc+1
@@ -241,6 +302,28 @@ int main(int argc, char *argv[]){
         itc = 0;
         error = 100.0;
 
+        // --- CUDA Events: fim do timestep ---
+        cudaEventRecord(ev_ts_stop);
+        cudaEventSynchronize(ev_ts_stop);
+        cudaEventElapsedTime(&time_timestep, ev_ts_start, ev_ts_stop);
+
+        // NOTA: Este código usa Unified Memory (cudaMallocManaged).
+        // Não há cudaMemcpy explícito Host→Device ou Device→Host.
+        // As transferências são gerenciadas implicitamente pelo driver CUDA
+        // via page faults. H2D e D2H medem 0.0 pois não há cópias explícitas.
+        // Para medir page migrations, use: nsys profile --trace=cuda,um
+        time_h2d = 0.0f;
+        time_d2h = 0.0f;
+
+        printf("[ITER %d][CUDA] kernel_solve_U = %.6f ms\n", tr, acc_solveU);
+        printf("[ITER %d][CUDA] kernel_solve_V = %.6f ms\n", tr, acc_solveV);
+        printf("[ITER %d][CUDA] kernel_solve_P = %.6f ms\n", tr, acc_solveP);
+        printf("[ITER %d][CUDA] kernel_solve_Z = %.6f ms\n", tr, acc_solveZ);
+        printf("[ITER %d][CUDA] kernel_solve_C = %.6f ms\n", tr, acc_solveC);
+        printf("[ITER %d][CUDA] H2D = %.6f ms\n", tr, time_h2d);
+        printf("[ITER %d][CUDA] D2H = %.6f ms\n", tr, time_d2h);
+        printf("[ITER %d][CUDA] timestep_total = %.6f ms\n", tr, time_timestep);
+
         tr = tr + 1;
     }
     //--- End of physical calculation ---
@@ -268,6 +351,18 @@ int main(int argc, char *argv[]){
     /*duration = omp_get_wtime() - duration;
     printf("post %lf\n", duration);
     */
+
+    //=================================================================
+    // CUDA Events — Destruição
+    //=================================================================
+    cudaEventDestroy(ev_ts_start);    cudaEventDestroy(ev_ts_stop);
+    cudaEventDestroy(ev_solveU_start); cudaEventDestroy(ev_solveU_stop);
+    cudaEventDestroy(ev_solveV_start); cudaEventDestroy(ev_solveV_stop);
+    cudaEventDestroy(ev_solveP_start); cudaEventDestroy(ev_solveP_stop);
+    cudaEventDestroy(ev_solveZ_start); cudaEventDestroy(ev_solveZ_stop);
+    cudaEventDestroy(ev_solveC_start); cudaEventDestroy(ev_solveC_stop);
+    cudaEventDestroy(ev_h2d_start);   cudaEventDestroy(ev_h2d_stop);
+    cudaEventDestroy(ev_d2h_start);   cudaEventDestroy(ev_d2h_stop);
 
     //desalocando
     cudaFree(dev_um);

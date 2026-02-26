@@ -2,16 +2,16 @@ rm -f *.mod  # remove arquivos .mod, sem erro se não existir
 rm -f *.out  # remove arquivos .out
 sh cleaning.sh  # executa script para limpeza extra
 
+NVCC=nvcc
+ARCH=sm_86
+OPT="-O2"
+STD="-std=c++11"
 
-#gfortran -O3 -fopenmp \
-#/opt/nvidia/hpc_sdk/Linux_x86_64/24.9/compilers/bin/pgf90 -O3 -pg \
-#/opt/nvidia/hpc_sdk/Linux_x86_64/24.9/compilers/bin/pgf90 -O3 -mp -pg \
 gcc -c probe.c -o probe.o
 gcc -c convergence.c -o convergence.o 
 gcc -c flametip.c -o flametip.o
 
-#/opt/nvidia/hpc_sdk/Linux_x86_64/25.5/compilers/bin/pgf90 
-nvcc -arch=sm_86 -O2 -std=c++11 -I. -diag-suppress 1650\
+$NVCC -arch=$ARCH $OPT $STD -lineinfo \
   xm_ym.cu \
   x_y.cu \
   vol.cu \
